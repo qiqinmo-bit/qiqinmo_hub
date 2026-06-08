@@ -1,0 +1,195 @@
+{
+  "version": "1.0",
+  "nodes": [
+    {
+      "id": "n001",
+      "label": "AI编程工具进化：从补全到Agent",
+      "keywords": [
+        "Cursor",
+        "Composer",
+        "Agent模式",
+        "AI编程",
+        "Aider",
+        "Cline"
+      ],
+      "path": "03_知识文档/01_Agent与AI编程/AI编程工具进化：从补全到Agent.md",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "n002",
+      "label": "灵感源: Cursor AI编程技巧",
+      "keywords": [
+        "Cursor",
+        "Composer",
+        "Agent模式"
+      ],
+      "path": "02_灵感分析/2026-06-09_Cursor_AI编程技巧",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_Cursor",
+      "label": "#Cursor",
+      "keywords": [
+        "Cursor"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_Composer",
+      "label": "#Composer",
+      "keywords": [
+        "Composer"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_Agent模式",
+      "label": "#Agent模式",
+      "keywords": [
+        "Agent模式"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_AI编程",
+      "label": "#AI编程",
+      "keywords": [
+        "AI编程"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_Aider",
+      "label": "#Aider",
+      "keywords": [
+        "Aider"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_Cline",
+      "label": "#Cline",
+      "keywords": [
+        "Cline"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "n009",
+      "label": "[待分析] 未命名灵感",
+      "keywords": [
+        "n8n",
+        "待分析"
+      ],
+      "path": "01_原始灵感\\2026-06-09_未命名灵感",
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_n8n",
+      "label": "#n8n",
+      "keywords": [
+        "n8n"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "kw_待分析",
+      "label": "#待分析",
+      "keywords": [
+        "待分析"
+      ],
+      "path": null,
+      "date": "2026-06-09"
+    },
+    {
+      "id": "n012",
+      "label": "[待分析] 未命名灵感",
+      "keywords": [
+        "n8n",
+        "待分析"
+      ],
+      "path": "01_原始灵感\\2026-06-09_未命名灵感",
+      "date": "2026-06-09"
+    }
+  ],
+  "edges": [
+    {
+      "from": "n001",
+      "to": "n002",
+      "label": "来源于"
+    },
+    {
+      "from": "n001",
+      "to": "kw_Cursor",
+      "label": "Cursor"
+    },
+    {
+      "from": "n001",
+      "to": "kw_Composer",
+      "label": "Composer"
+    },
+    {
+      "from": "n001",
+      "to": "kw_Agent模式",
+      "label": "Agent模式"
+    },
+    {
+      "from": "n001",
+      "to": "kw_AI编程",
+      "label": "AI编程"
+    },
+    {
+      "from": "n001",
+      "to": "kw_Aider",
+      "label": "Aider"
+    },
+    {
+      "from": "n001",
+      "to": "kw_Cline",
+      "label": "Cline"
+    },
+    {
+      "from": "n002",
+      "to": "kw_Cursor",
+      "label": "Cursor"
+    },
+    {
+      "from": "n002",
+      "to": "kw_Composer",
+      "label": "Composer"
+    },
+    {
+      "from": "n002",
+      "to": "kw_Agent模式",
+      "label": "Agent模式"
+    },
+    {
+      "from": "n009",
+      "to": "kw_n8n",
+      "label": "n8n"
+    },
+    {
+      "from": "n009",
+      "to": "kw_待分析",
+      "label": "待分析"
+    },
+    {
+      "from": "n012",
+      "to": "kw_n8n",
+      "label": "n8n"
+    },
+    {
+      "from": "n012",
+      "to": "kw_待分析",
+      "label": "待分析"
+    }
+  ],
+  "last_updated": "2026-06-09"
+}

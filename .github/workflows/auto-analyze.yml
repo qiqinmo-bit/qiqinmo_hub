@@ -1,0 +1,102 @@
+# ============================================================
+# 🤖 日常灵感工作流 — AI 自动分析
+# ============================================================
+# 当新灵感入库时，自动调用 AI 进行分析。
+#
+# 成本策略（三档回退）:
+#   1️⃣ GitHub Models (免费) — 用 GITHUB_TOKEN，零成本
+#   2️⃣ DeepSeek (低价)      — 用 DEEPSEEK_API_KEY
+#   3️⃣ OpenAI (付费兜底)    — 用 OPENAI_API_KEY
+#
+# 配置:
+#   在 GitHub 仓库 Settings → Secrets and variables → Actions 中设置:
+#   - DEEPSEEK_API_KEY (可选)
+#   - OPENAI_API_KEY (可选)
+#   GITHUB_TOKEN 自动可用，无需配置
+# ============================================================
+
+name: 🤖 灵感自动分析
+
+on:
+  push:
+    paths:
+      - "01_原始灵感/**/description.md"
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ 检出仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - name: 🐍 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 🔍 查找最新未分析的灵感
+        id: find_inspiration
+        run: |
+          # 找最新的 description.md
+          latest=$(find 01_原始灵感 -name "description.md" -newer .git/HEAD 2>/dev/null | head -1)
+          if [ -z "$latest" ]; then
+            # fallback: 取最新的
+            latest=$(find 01_原始灵感 -name "description.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+          fi
+          echo "latest=$latest" >> $GITHUB_OUTPUT
+          echo "📄 待分析: $latest"
+
+      - name: 🧠 AI 分析（三档回退）
+        id: analyze
+        if: steps.find_inspiration.outputs.latest != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          desc_path="${{ steps.find_inspiration.outputs.latest }}"
+          echo "📄 分析: $desc_path"
+          result=$(python _scripts/ai_analyzer.py --file "$desc_path" --mode quick 2>&1)
+          echo "$result"
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          echo "$result" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 💾 保存分析结果
+        if: steps.analyze.outputs.result != ''
+        run: |
+          echo '${{ steps.analyze.outputs.result }}' | python -c "
+import sys, json, os
+result = json.loads(sys.stdin.read())
+if not result.get('success'):
+    print('⚠️ 分析失败，跳过')
+    sys.exit(0)
+
+print(f\"🎯 使用模型: {result.get('tier')} / {result.get('model')}\")
+print(f\"📂 建议分类: {result.get('category')}\")
+print(f\"🏷️ 关键词: {result.get('keywords')}\")
+"
+
+      - name: 📦 提交分析结果
+        run: |
+          git config user.name "灵感机器人"
+          git config user.email "bot@inspiration-workflow"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "ℹ️  无变更需要提交"
+          else
+            git commit -m "🤖 auto: AI 分析新灵感 [skip ci]"
+            git push
+            echo "✅ AI 分析结果已提交"
+          fi

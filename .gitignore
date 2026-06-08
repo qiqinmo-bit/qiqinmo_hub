@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# n8n (本地运行)
+n8n_cookies*.txt
+*.sqlite*
+n8n_*.json
+version_id.txt
+v.txt
+
+# Windows
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 日常灵感工作流 — 知识网络</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0d1117; color: #e6edf3; padding: 24px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 32px; padding-bottom: 16px;
+    border-bottom: 1px solid #30363d;
+  }
+  header h1 { font-size: 24px; }
+  header .badge {
+    background: #238636; color: #fff; font-size: 12px;
+    padding: 2px 10px; border-radius: 12px;
+  }
+  .stats {
+    display: flex; gap: 24px; margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 16px 24px; flex: 1; min-width: 140px;
+  }
+  .stat-card .num { font-size: 32px; font-weight: bold; color: #58a6ff; }
+  .stat-card .label { font-size: 13px; color: #8b949e; margin-top: 4px; }
+  .graph-container {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 24px; margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .graph-title {
+    font-size: 16px; font-weight: 600; margin-bottom: 16px;
+    color: #f0f6fc;
+  }
+  #mermaid-graph { text-align: center; }
+  .node-list {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 24px;
+  }
+  .node-list h3 { margin-bottom: 12px; color: #f0f6fc; }
+  .node-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 0; border-bottom: 1px solid #21262d;
+  }
+  .node-item:last-child { border-bottom: none; }
+  .node-tag {
+    background: #1f6feb33; color: #58a6ff;
+    padding: 2px 8px; border-radius: 4px; font-size: 12px;
+  }
+  .footer {
+    margin-top: 32px; text-align: center; font-size: 12px; color: #484f58;
+  }
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧠 知识网络</h1>
+    <span class="badge">GitHub Pages</span>
+  </header>
+
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="num" id="doc-count">-</div>
+      <div class="label">知识文档</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="tag-count">-</div>
+      <div class="label">关键词标签</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="edge-count">-</div>
+      <div class="label">关联连接</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="update-date">-</div>
+      <div class="label">最后更新</div>
+    </div>
+  </div>
+
+  <div class="graph-container">
+    <div class="graph-title">🕸️ 知识图谱</div>
+    <div id="mermaid-graph" class="mermaid">
+      %% 数据在页面加载后通过 JS 注入
+      graph TD
+        A[加载中...]
+    </div>
+  </div>
+
+  <div class="node-list" id="node-list">
+    <h3>📚 知识节点</h3>
+    <div id="nodes-content">加载中...</div>
+  </div>
+
+  <div class="footer">
+    数据来源: <a href="https://github.com/qiqinmo-bit/qiqinmo_hub">qiqinmo_hub</a>
+    · 由 GitHub Actions 自动更新
+  </div>
+</div>
+
+<script>
+// 从 GitHub raw 加载 graph_data.json
+async function loadGraph() {
+  try {
+    const repo = 'qiqinmo_hub';
+    const url = `https://raw.githubusercontent.com/qiqinmo-bit/qiqinmo_hub/main/04_%E7%9F%A5%E8%AF%86%E7%BD%91%E7%BB%9C/graph_data.json`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    // 统计
+    const docs = data.nodes.filter(n => n.id.startsWith('n')).length;
+    const tags = data.nodes.filter(n => n.id.startsWith('kw')).length;
+    document.getElementById('doc-count').textContent = docs;
+    document.getElementById('tag-count').textContent = tags;
+    document.getElementById('edge-count').textContent = data.edges.length;
+    document.getElementById('update-date').textContent = data.last_updated || '-';
+
+    // 生成 Mermaid 图
+    let mermaidDef = 'graph LR\n';
+    for (const edge of data.edges) {
+      const from = data.nodes.find(n => n.id === edge.from);
+      const to = data.nodes.find(n => n.id === edge.to);
+      if (from && to) {
+        const f = from.id.replace(/-/g, '_');
+        const t = to.id.replace(/-/g, '_');
+        const label = edge.label || '';
+        mermaidDef += `    ${f}[\"${from.label}\"] -->|"${label}"| ${t}{\"${to.label}\"}\n`;
+      }
+    }
+
+    document.getElementById('mermaid-graph').textContent = mermaidDef;
+    mermaid.run({ nodes: [document.getElementById('mermaid-graph')] });
+
+    // 节点列表
+    const nodesHtml = data.nodes
+      .filter(n => n.id.startsWith('n'))
+      .map(n => {
+        const tags = (n.keywords || []).map(k => `<span class="node-tag">#${k}</span>`).join('');
+        return `<div class="node-item">📄 ${n.label} ${tags}</div>`;
+      }).join('');
+    document.getElementById('nodes-content').innerHTML = nodesHtml || '暂无知识节点';
+
+  } catch (e) {
+    document.getElementById('mermaid-graph').textContent = 'graph TD\n  A[数据加载失败]';
+    document.getElementById('nodes-content').innerHTML = '⚠️ 数据加载失败，请确认仓库已推送到 GitHub';
+  }
+}
+loadGraph();
+</script>
+</body>
+</html>
