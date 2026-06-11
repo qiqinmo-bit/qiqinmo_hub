@@ -211,6 +211,16 @@
       ],
       "path": null,
       "date": "2026-06-12"
+    },
+    {
+      "id": "n023",
+      "label": "01:22",
+      "keywords": [
+        "模型与API",
+        "OCR"
+      ],
+      "path": "01_原始灵感\\2026-06-12_01_22",
+      "date": "2026-06-12"
     }
   ],
   "edges": [
@@ -321,6 +331,16 @@
     },
     {
       "from": "n021",
+      "to": "kw_OCR",
+      "label": "OCR"
+    },
+    {
+      "from": "n023",
+      "to": "kw_模型与API",
+      "label": "模型与API"
+    },
+    {
+      "from": "n023",
       "to": "kw_OCR",
       "label": "OCR"
     }
