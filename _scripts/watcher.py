@@ -126,9 +126,12 @@ def process_image(image_path):
     log(f"[保存] {folder_name}")
 
     # 更新索引
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
     subprocess.run(
         [sys.executable, os.path.join(BASE, "_scripts", "process_inspiration.py"), "--auto"],
-        cwd=BASE, capture_output=True, text=True
+        cwd=BASE, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=env
     )
     log(f"[索引] 已更新")
 
