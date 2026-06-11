@@ -1,13 +1,17 @@
 # ============================================================
-# 🤖 日常灵感工作流 — AI 自动分析
+# 🤖 日常灵感工作流 — AI 自动分析（批量）
 # ============================================================
-# 当新灵感入库时，自动调用 AI 进行分析并保存结果。
-# 一次性分析所有未分析的灵感（不是只分析最新的那篇）。
+# 一次性分析所有未分析的灵感，不限于最新那篇。
 #
 # 成本策略（三档回退）:
 #   1️⃣ GitHub Models (免费) — 用 GITHUB_TOKEN，零成本
 #   2️⃣ DeepSeek (低价)      — 用 DEEPSEEK_API_KEY
 #   3️⃣ OpenAI (付费兜底)    — 用 OPENAI_API_KEY
+#
+# 所需 Secrets:
+#   GITHUB_TOKEN 自动可用
+#   DEEPSEEK_API_KEY (可选)
+#   OPENAI_API_KEY (可选)
 # ============================================================
 
 name: 🤖 灵感自动分析
@@ -40,93 +44,111 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: 🔍 查找所有未分析的灵感
-        id: find_pending
+      - name: 🔍 查找待分析列表
+        id: pending
         run: |
-          # 遍历所有 description.md，找还没有对应 analysis.md 的
-          > pending.txt
-          for desc in $(find 01_原始灵感 -name "description.md" -type f); do
-            folder=$(dirname "$desc")
-            folder_name=$(basename "$folder")
-            analysis_path="02_灵感分析/$folder_name/analysis.md"
-            if [ ! -f "$analysis_path" ]; then
-              echo "$desc" >> pending.txt
-              echo "⏳ 待分析: $folder_name"
-            fi
-          done
-          count=$(wc -l < pending.txt)
-          echo "count=$count" >> $GITHUB_OUTPUT
-          echo "📊 共 $count 篇待分析"
+          python3 << 'PYEOF'
+import os, json
 
-      - name: 🧠 逐篇 AI 分析（三档回退）
-        if: steps.find_pending.outputs.count > 0
+pending = []
+for root, dirs, files in os.walk("01_原始灵感"):
+    if "description.md" in files:
+        folder = os.path.basename(root)
+        analysis_path = os.path.join("02_灵感分析", folder, "analysis.md")
+        if not os.path.exists(analysis_path):
+            pending.append(os.path.join(root, "description.md"))
+            print(f"⏳ 待分析: {folder}")
+
+# 写入临时文件
+with open("pending.txt", "w") as f:
+    for p in pending:
+        f.write(p + "\n")
+print(f"📊 共 {len(pending)} 篇待分析")
+PYEOF
+          echo "count=$(wc -l < pending.txt)" >> $GITHUB_OUTPUT
+
+      - name: 🧠 批量 AI 分析
+        if: steps.pending.outputs.count > 0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          while IFS= read -r desc_path; do
-            folder_name=$(basename "$(dirname "$desc_path")")
-            echo ""
-            echo "=========================================="
-            echo "📄 分析: $folder_name"
-            echo "=========================================="
-
-            result=$(python _scripts/ai_analyzer.py --file "$desc_path" --mode quick 2>&1)
-            echo "$result"
-
-            # 提取 JSON（最后一行是 JSON 输出）
-            json_line=$(echo "$result" | grep -E '^\{' | tail -1)
-            if [ -z "$json_line" ]; then
-              echo "⚠️ 跳过: 无法解析分析结果"
-              continue
-            fi
-
-            # 解析并保存
-            python3 -c "
-import sys, json, os
+          python3 << 'PYEOF'
+import os, sys, json, subprocess
 from datetime import date
 
-result = json.loads('''$json_line''')
-if not result.get('success'):
-    print('⚠️ 分析失败，跳过')
-    sys.exit(0)
+BASE = os.getcwd()
+SCRIPT = os.path.join("_scripts", "ai_analyzer.py")
 
-folder_name = '$folder_name'
-target_dir = os.path.join('02_灵感分析', folder_name)
-os.makedirs(target_dir, exist_ok=True)
+with open("pending.txt") as f:
+    desc_paths = [line.strip() for line in f if line.strip()]
 
-content = result.get('content', '')
-keywords = result.get('keywords', [])
-category = result.get('category', '')
-tier = result.get('tier', '')
-model = result.get('model', '')
+for desc_path in desc_paths:
+    folder_name = os.path.basename(os.path.dirname(desc_path))
+    target_dir = os.path.join("02_灵感分析", folder_name)
+    os.makedirs(target_dir, exist_ok=True)
 
-analysis = f'''# 灵感分析
+    print()
+    print("=" * 50)
+    print(f"📄 分析: {folder_name}")
+    print("=" * 50)
+
+    # 调用 ai_analyzer.py
+    result = subprocess.run(
+        [sys.executable, SCRIPT, "--file", desc_path, "--mode", "quick"],
+        capture_output=True, text=True, cwd=BASE,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"}
+    )
+
+    # 解析 JSON 输出（最后一行）
+    output = (result.stdout + result.stderr).strip()
+    json_line = ""
+    for line in output.split("\n"):
+        line = line.strip()
+        if line.startswith("{"):
+            json_line = line
+
+    if not json_line:
+        print(f"⚠️ 无法解析 AI 输出，跳过")
+        print(f"输出:{output[:200]}...")
+        continue
+
+    ai_result = json.loads(json_line)
+    if not ai_result.get("success"):
+        print(f"⚠️ AI 分析失败，跳过")
+        continue
+
+    content = ai_result.get("content", "")
+    keywords = ai_result.get("keywords", [])
+    category = ai_result.get("category", "")
+    tier = ai_result.get("tier", "")
+    model = ai_result.get("model", "")
+
+    # 写入 analysis.md
+    analysis = f"""# 灵感分析
 
 **日期**: {date.today().isoformat()}
 **来源**: 01_原始灵感/{folder_name}
 **分析引擎**: {tier} ({model})
 **建议分类**: {category}
-**关键词**: {', '.join(keywords)}
+**关键词**: {", ".join(keywords)}
 
 ---
 
 ## 分析结果
 
 {content}
-'''
+"""
+    path = os.path.join(target_dir, "analysis.md")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(analysis)
 
-path = os.path.join(target_dir, 'analysis.md')
-with open(path, 'w', encoding='utf-8') as f:
-    f.write(analysis)
+    print(f"✅ 已保存: {path}")
+    print(f"📂 分类: {category}")
+    print(f"🏷️ 关键词: {', '.join(keywords)}")
 
-print(f'✅ 已保存: {path}')
-print(f'📂 分类: {category}')
-print(f'🏷️ 关键词: {', '.join(keywords)}')
-"
-
-          done < pending.txt
+PYEOF
 
       - name: 📦 提交所有分析结果
         run: |
