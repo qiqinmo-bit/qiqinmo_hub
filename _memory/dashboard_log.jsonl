@@ -1,33 +1,6 @@
-{"time": "02:01:21", "type": "process", "msg": "处理: img_v3_0212j_0a797753-d914-43ab-9969-63fce5f84a5g.jpg"}
-{"time": "02:01:31", "type": "info", "msg": "OCR识别: 26段文字"}
-{"time": "02:01:31", "type": "save", "msg": "入库: 灵感_001 (26段)"}
-{"time": "02:01:43", "type": "push", "msg": "推送到GitHub成功"}
-{"time": "02:01:43", "type": "complete", "msg": "完成: 灵感_001"}
-{"time": "02:01:43", "type": "process", "msg": "处理: img_v3_0212j_19e52eb6-14a1-4617-a711-c4685820ff9g.jpg"}
-{"time": "02:01:57", "type": "info", "msg": "OCR识别: 29段文字"}
-{"time": "02:01:57", "type": "save", "msg": "入库: 灵感_002 (29段)"}
-{"time": "02:02:05", "type": "push", "msg": "推送到GitHub成功"}
-{"time": "02:02:05", "type": "complete", "msg": "完成: 灵感_002"}
-{"time": "02:02:05", "type": "process", "msg": "处理: img_v3_0212j_2d57df0b-a954-4449-8f10-04a308504f5g.jpg"}
-{"time": "02:02:15", "type": "info", "msg": "OCR识别: 35段文字"}
-{"time": "02:02:15", "type": "save", "msg": "入库: 灵感_003 (35段)"}
-{"time": "02:02:23", "type": "push", "msg": "推送到GitHub成功"}
-{"time": "02:02:23", "type": "complete", "msg": "完成: 灵感_003"}
-{"time": "02:02:23", "type": "process", "msg": "处理: img_v3_0212j_709010d0-4b1e-44b8-8a63-cb209a97977g.jpg"}
-{"time": "02:02:34", "type": "info", "msg": "OCR识别: 37段文字"}
-{"time": "02:02:34", "type": "save", "msg": "入库: 灵感_004 (37段)"}
-{"time": "02:02:43", "type": "push", "msg": "推送到GitHub成功"}
-{"time": "02:02:43", "type": "complete", "msg": "完成: 灵感_004"}
-{"time": "02:02:43", "type": "process", "msg": "处理: img_v3_0212j_c1a63e99-2a0f-41c2-b19d-44e3d3623bbg.jpg"}
-{"time": "02:02:54", "type": "info", "msg": "OCR识别: 28段文字"}
-{"time": "02:02:54", "type": "save", "msg": "入库: 灵感_005 (28段)"}
-{"time": "02:03:03", "type": "push", "msg": "推送到GitHub成功"}
-{"time": "02:03:03", "type": "complete", "msg": "完成: 灵感_005"}
-{"time": "02:03:03", "type": "process", "msg": "处理: img_v3_0212j_d006ede3-c6d4-4552-8069-d94407a3e86g.jpg"}
-{"time": "02:03:16", "type": "info", "msg": "OCR识别: 32段文字"}
-{"time": "02:03:16", "type": "save", "msg": "入库: 灵感_006 (32段)"}
-{"time": "02:03:24", "type": "push", "msg": "推送到GitHub成功"}
-{"time": "02:03:24", "type": "complete", "msg": "完成: 灵感_006"}
-{"time": "02:03:24", "type": "process", "msg": "处理: img_v3_0212j_f468ad43-c3e1-49e0-8f48-e5cd33b95e9g.jpg"}
-{"time": "02:03:39", "type": "info", "msg": "OCR识别: 26段文字"}
-{"time": "02:03:39", "type": "save", "msg": "入库: 灵感_007 (26段)"}
+{"time": "02:07:01", "type": "process", "msg": "处理: 进度测试.jpg"}
+{"time": "02:07:02", "type": "process", "msg": "处理: 进度测试.jpg"}
+{"time": "02:07:11", "type": "info", "msg": "OCR识别: 1段文字"}
+{"time": "02:07:11", "type": "save", "msg": "入库: 灵感_008 (1段)"}
+{"time": "02:07:11", "type": "info", "msg": "OCR识别: 1段文字"}
+{"time": "02:07:11", "type": "save", "msg": "入库: 灵感_009 (1段)"}

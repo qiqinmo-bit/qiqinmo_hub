@@ -55,6 +55,35 @@ def get_total_entries():
     except:
         return 0
 
+def get_current_step():
+    """从最新日志判断当前进度步骤 (0-6)"""
+    logs = read_logs(20)
+    if not logs:
+        return 0
+    # 定义步骤映射
+    steps = {
+        "process": 1,
+        "skip": 6,
+    }
+    # 从最新到最老遍历，找最高步骤
+    step = 0
+    for log in reversed(logs):
+        t = log.get("type", "")
+        msg = log.get("msg", "")
+        if t == "complete" or t == "skip":
+            return 6
+        if t == "push":
+            step = max(step, 5)
+        elif "索引" in msg and t != "":
+            step = max(step, 4)
+        elif t == "save":
+            step = max(step, 3)
+        elif t == "info" and "OCR" in msg:
+            step = max(step, 2)
+        elif t == "process":
+            step = max(step, 1)
+    return step
+
 def get_watcher_status():
     """检查 watcher 是否在运行"""
     # 看最后一条日志的时间
@@ -78,12 +107,17 @@ def get_watcher_status():
 def index():
     return render_template("dashboard.html")
 
+@app.route("/api/progress")
+def api_progress():
+    return jsonify({"step": get_current_step(), "max": 6})
+
 @app.route("/api/status")
 def api_status():
     return jsonify({
         "watcher": get_watcher_status(),
         "today": get_today_count(),
         "total_entries": get_total_entries(),
+        "step": get_current_step(),
         "timestamp": datetime.datetime.now().isoformat()
     })
 

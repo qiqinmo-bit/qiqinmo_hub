@@ -44,17 +44,83 @@
     display: flex;
     gap: 20px;
   }
-  .stat-item {
-    text-align: center;
+  .stat-item { text-align: center; }
+  .stat-item .num { font-size: 22px; font-weight: 700; }
+  .stat-item .label { font-size: 11px; color: #8b949e; margin-top: 2px; }
+
+  /* ── 进度条 ── */
+  .progress-bar {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 14px 24px;
   }
-  .stat-item .num {
-    font-size: 22px;
-    font-weight: 700;
+  .progress-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    max-width: 700px;
+    margin: 0 auto;
   }
-  .stat-item .label {
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .step-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    background: #0d1117;
+    color: #484f58;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+  .step-circle .step-label {
+    position: absolute;
+    top: 34px;
     font-size: 11px;
-    color: #8b949e;
-    margin-top: 2px;
+    white-space: nowrap;
+    color: #484f58;
+    font-weight: 400;
+    transition: color 0.4s ease;
+  }
+  .step-circle.active {
+    border-color: #d29922;
+    background: #d29922;
+    color: #0d1117;
+    box-shadow: 0 0 12px rgba(210,153,34,0.4);
+  }
+  .step-circle.active .step-label {
+    color: #d29922;
+  }
+  .step-circle.done {
+    border-color: #3fb950;
+    background: #3fb950;
+    color: #0d1117;
+  }
+  .step-circle.done .step-label {
+    color: #3fb950;
+  }
+  .step-connector {
+    width: 40px;
+    height: 3px;
+    background: #21262d;
+    transition: background 0.4s ease;
+    flex-shrink: 0;
+    margin: 0 4px;
+  }
+  .step-connector.done {
+    background: #3fb950;
+  }
+  .step-connector.active {
+    background: #d29922;
   }
 
   /* ── 日志区 ── */
@@ -72,16 +138,9 @@
     display: flex;
     gap: 8px;
   }
-  .log-time {
-    color: #484f58;
-    min-width: 60px;
-    flex-shrink: 0;
-  }
-  .log-msg {
-    word-break: break-all;
-  }
+  .log-time { color: #484f58; min-width: 60px; flex-shrink: 0; }
+  .log-msg { word-break: break-all; }
 
-  /* 颜色 */
   .log-msg.ok { color: #3fb950; }
   .log-msg.info { color: #58a6ff; }
   .log-msg.warn { color: #d29922; }
@@ -103,7 +162,6 @@
   }
   .footer a { color: #58a6ff; text-decoration: none; }
 
-  /* ── 空状态 ── */
   .empty-state {
     display: flex;
     flex-direction: column;
@@ -121,6 +179,9 @@
     .stats { gap: 12px; }
     .stat-item .num { font-size: 18px; }
     .log-area { padding: 8px 16px; font-size: 12px; }
+    .step-connector { width: 20px; }
+    .step-circle { width: 24px; height: 24px; font-size: 10px; }
+    .step-circle .step-label { font-size: 9px; top: 30px; }
   }
 </style>
 </head>
@@ -149,6 +210,60 @@
   </div>
 </div>
 
+<!-- 进度条 -->
+<div class="progress-bar">
+  <div class="progress-steps" id="progressSteps">
+    <div class="step-item">
+      <div class="step-circle" data-step="0">
+        <span>📥</span>
+        <span class="step-label">等待</span>
+      </div>
+    </div>
+    <div class="step-connector" data-connector="1"></div>
+    <div class="step-item">
+      <div class="step-circle" data-step="1">
+        <span>🔍</span>
+        <span class="step-label">发现</span>
+      </div>
+    </div>
+    <div class="step-connector" data-connector="2"></div>
+    <div class="step-item">
+      <div class="step-circle" data-step="2">
+        <span>👁️</span>
+        <span class="step-label">OCR</span>
+      </div>
+    </div>
+    <div class="step-connector" data-connector="3"></div>
+    <div class="step-item">
+      <div class="step-circle" data-step="3">
+        <span>💾</span>
+        <span class="step-label">入库</span>
+      </div>
+    </div>
+    <div class="step-connector" data-connector="4"></div>
+    <div class="step-item">
+      <div class="step-circle" data-step="4">
+        <span>📊</span>
+        <span class="step-label">索引</span>
+      </div>
+    </div>
+    <div class="step-connector" data-connector="5"></div>
+    <div class="step-item">
+      <div class="step-circle" data-step="5">
+        <span>🚀</span>
+        <span class="step-label">推送</span>
+      </div>
+    </div>
+    <div class="step-connector" data-connector="6"></div>
+    <div class="step-item">
+      <div class="step-circle" data-step="6">
+        <span>✅</span>
+        <span class="step-label">完成</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 日志 -->
 <div class="log-area" id="logContainer">
   <div class="empty-state" id="emptyState">
@@ -165,6 +280,30 @@
 </div>
 
 <script>
+// ── 进度条更新 ──
+function updateProgress(step) {
+  const circles = document.querySelectorAll('.step-circle');
+  const connectors = document.querySelectorAll('.step-connector');
+  
+  circles.forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < step) {
+      el.classList.add('done');
+    } else if (i === step) {
+      el.classList.add('active');
+    }
+  });
+  
+  connectors.forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i < step) {
+      el.classList.add('done');
+    } else if (i === step && step < 6) {
+      el.classList.add('active');
+    }
+  });
+}
+
 // ── 日志类型 → CSS class ──
 function msgClass(log) {
   const type = log.type || '';
@@ -191,14 +330,12 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// ── 添加一条日志 ──
+// ── 添加日志 ──
 const logContainer = document.getElementById('logContainer');
 const emptyState = document.getElementById('emptyState');
-let logCount = 0;
 
 function addLog(log) {
   if (emptyState) emptyState.remove();
-
   const entry = document.createElement('div');
   entry.className = 'log-entry';
   entry.innerHTML = `
@@ -206,9 +343,6 @@ function addLog(log) {
     <span class="log-msg ${msgClass(log)}">${escapeHtml(log.msg || '')}</span>
   `;
   logContainer.appendChild(entry);
-  logCount++;
-
-  // 自动滚动到底部
   logContainer.scrollTop = logContainer.scrollHeight;
 }
 
@@ -230,11 +364,17 @@ async function updateStatus() {
     const s = await resp.json();
     document.getElementById('todayCount').textContent = s.today;
     document.getElementById('totalEntries').textContent = s.total_entries;
+    updateProgress(s.step || 0);
 
     const badge = document.getElementById('statusBadge');
     if (s.watcher === 'running') {
-      badge.textContent = '运行中';
-      badge.className = 'badge running';
+      if (s.step > 0 && s.step < 6) {
+        badge.textContent = '处理中';
+        badge.className = 'badge processing';
+      } else {
+        badge.textContent = '运行中';
+        badge.className = 'badge running';
+      }
       document.getElementById('uptime').textContent = '活跃';
     } else {
       badge.textContent = '已停止';
@@ -252,7 +392,6 @@ function connectSSE() {
   evtSource.onmessage = function(e) {
     try {
       const logs = JSON.parse(e.data);
-      // 只新增不重复的
       for (const log of logs) {
         const key = log.time + log.msg;
         if (!lastLogs.includes(key)) {
@@ -265,12 +404,11 @@ function connectSSE() {
     } catch(e) {}
   };
   evtSource.onerror = function() {
-    // 断线重连
     setTimeout(connectSSE, 3000);
   };
 }
 
-// ── 定时轮询（SSE 后备） ──
+// ── 定时轮询后备 ──
 let lastLogTime = '';
 setInterval(async () => {
   try {
