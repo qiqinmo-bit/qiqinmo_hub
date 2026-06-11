@@ -13,6 +13,14 @@ n8n_*.json
 version_id.txt
 v.txt
 
+# Node.js (已移除)
+node_modules/
+package-lock.json
+
+# 工具残留
+.codepilot-uploads/
+.reasonix/
+
 # Windows
 Thumbs.db
 
@@ -20,3 +28,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# 截图临时文件
+*测试截图*.jpg
+*test*.jpg
+*桌面截图*.jpg
