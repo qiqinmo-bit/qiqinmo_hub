@@ -173,6 +173,44 @@
       ],
       "path": null,
       "date": "2026-06-12"
+    },
+    {
+      "id": "n019",
+      "label": "[待分析] [OCR 未安装] 请手动查看图片: 01_原始灵感/202",
+      "keywords": [
+        "fallback",
+        "待分析"
+      ],
+      "path": "01_原始灵感\\2026-06-12_[OCR_未安装]_请手动查看图片__01_原始灵感_202",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "kw_fallback",
+      "label": "#fallback",
+      "keywords": [
+        "fallback"
+      ],
+      "path": null,
+      "date": "2026-06-12"
+    },
+    {
+      "id": "n021",
+      "label": "AI模型选择建议",
+      "keywords": [
+        "模型与API",
+        "OCR"
+      ],
+      "path": "01_原始灵感\\2026-06-12_AI模型选择建议",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "kw_模型与API",
+      "label": "#模型与API",
+      "keywords": [
+        "模型与API"
+      ],
+      "path": null,
+      "date": "2026-06-12"
     }
   ],
   "edges": [
@@ -265,6 +303,26 @@
       "from": "n016",
       "to": "kw_手动输入",
       "label": "手动输入"
+    },
+    {
+      "from": "n019",
+      "to": "kw_fallback",
+      "label": "fallback"
+    },
+    {
+      "from": "n019",
+      "to": "kw_待分析",
+      "label": "待分析"
+    },
+    {
+      "from": "n021",
+      "to": "kw_模型与API",
+      "label": "模型与API"
+    },
+    {
+      "from": "n021",
+      "to": "kw_OCR",
+      "label": "OCR"
     }
   ],
   "last_updated": "2026-06-12"
