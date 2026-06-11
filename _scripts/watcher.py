@@ -1,5 +1,5 @@
 """
-收图夹 - 自动监听 + OCR + 入库 + 推送
+收图夹 - 轮询监听 + OCR + 入库 + 推送
 
 用法:
   python _scripts/watcher.py
@@ -7,12 +7,11 @@
 
 工作方式:
   把截图放进 收图夹/ 文件夹
-  -> 自动 OCR -> 入库 -> git push
+  每 5 秒检测新文件 -> 自动 OCR -> 入库 -> git push
+  按 Ctrl+C 停止
 """
 
 import sys, os, datetime, re, subprocess, shutil, time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
 # Windows GBK 终端兼容
 if sys.stdout.encoding and sys.stdout.encoding.lower() in ("gbk", "gb2312"):
@@ -22,13 +21,9 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WATCH_DIR = os.path.join(BASE, "收图夹")
 os.makedirs(WATCH_DIR, exist_ok=True)
 
-# ── 工具函数 ────────────────────────────────────────
-
 def log(msg):
     t = datetime.datetime.now().strftime("%H:%M:%S")
-    # 过滤 GBK 不兼容字符
-    safe = msg.encode("gbk", errors="replace").decode("gbk", errors="replace")
-    print(f"[{t}] {safe}")
+    print(f"[{t}] {msg}", flush=True)
 
 def slug(text):
     s = text.strip()
@@ -42,23 +37,9 @@ def today():
 def is_image(filename):
     return filename.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".webp"))
 
-def file_stable(path, wait=3, check_interval=0.5):
-    """等待文件写入完成（大小稳定）"""
-    try:
-        size = -1
-        for _ in range(int(wait / check_interval)):
-            time.sleep(check_interval)
-            if os.path.getsize(path) == size:
-                return True
-            size = os.path.getsize(path)
-        return True
-    except:
-        return False
-
 # ── OCR ────────────────────────────────────────────
 
 def do_ocr(image_path):
-    """用 rapidocr 识别图片文字"""
     from rapidocr_onnxruntime import RapidOCR
     engine = RapidOCR()
     result, elapse = engine(image_path)
@@ -151,7 +132,8 @@ def process_image(image_path):
                       cwd=BASE, capture_output=True)
         subprocess.run(["git", "config", "--local", "https.proxy", f"http://127.0.0.1:{port}"], 
                       cwd=BASE, capture_output=True)
-        push = subprocess.run(["git", "push"], cwd=BASE, capture_output=True, text=True, timeout=30)
+        push = subprocess.run(["git", "push"], cwd=BASE, capture_output=True, text=True, timeout=30,
+                            encoding="utf-8", errors="replace")
         subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
         subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
         if push.returncode == 0:
@@ -169,65 +151,51 @@ def process_image(image_path):
         pass
 
     log(f"[完成] {title}")
-    print("-" * 40)
-
-# ── 文件监听器 ──────────────────────────────────────
-
-class ImageHandler(FileSystemEventHandler):
-    def on_created(self, event):
-        if event.is_directory:
-            return
-        if not is_image(event.src_path):
-            return
-        time.sleep(1)
-        try:
-            process_image(event.src_path)
-        except Exception as e:
-            log(f"[错误] {e}")
-
-    def on_modified(self, event):
-        if event.is_directory:
-            return
-        if not is_image(event.src_path):
-            return
-        if not file_stable(event.src_path):
-            return
-        try:
-            process_image(event.src_path)
-        except Exception as e:
-            log(f"[错误] {e}")
+    print("-" * 40, flush=True)
 
 # ── 主程序 ─────────────────────────────────────────
 
 def main():
     print()
     print("=" * 45)
-    print("  [收图夹] 自动监听中")
+    print("  [收图夹] 自动监听中 (轮询模式)")
     print("=" * 45)
     print(f"\n  把截图放入: {WATCH_DIR}")
-    print(f"\n  处理后自动: OCR > 入库 > 推送 GitHub")
+    print(f"\n  每 5 秒检测新文件")
+    print(f"\n  处理流程: OCR > 入库 > 推送 GitHub")
     print(f"\n  按 Ctrl+C 停止\n")
 
-    # 先处理已有的文件
-    for fname in os.listdir(WATCH_DIR):
-        fpath = os.path.join(WATCH_DIR, fname)
-        if os.path.isfile(fpath) and is_image(fname):
-            log(f"[待处理] {fname}")
-            process_image(fpath)
+    # 记录已处理的文件名
+    processed = set()
 
-    # 启动监听
-    event_handler = ImageHandler()
-    observer = Observer()
-    observer.schedule(event_handler, WATCH_DIR, recursive=False)
-    observer.start()
-    
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-        log("[停止] 收图夹已停止")
-    observer.join()
+    while True:
+        try:
+            for fname in os.listdir(WATCH_DIR):
+                fpath = os.path.join(WATCH_DIR, fname)
+                if not os.path.isfile(fpath):
+                    continue
+                if not is_image(fname):
+                    continue
+                if fname in processed:
+                    continue
+
+                # 避免文件还在写入中
+                try:
+                    size = os.path.getsize(fpath)
+                except:
+                    continue
+
+                processed.add(fname)
+                log(f"[发现] {fname}")
+                process_image(fpath)
+
+            time.sleep(5)
+        except KeyboardInterrupt:
+            log("[停止] 收图夹已停止")
+            break
+        except Exception as e:
+            log(f"[错误] {e}")
+            time.sleep(5)
 
 if __name__ == "__main__":
     main()
