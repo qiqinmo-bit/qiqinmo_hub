@@ -142,21 +142,24 @@ def git_push():
         ["git", "diff", "--cached", "--quiet"],
         cwd=BASE, capture_output=True
     )
-    if result.returncode == 0:
-        log("ℹ️  无变更，跳过提交")
-    else:
+    has_changes = result.returncode != 0
+    
+    if has_changes:
         subprocess.run(
             ["git", "commit", "-m", f"📸 灵感: 截图自动入库 [skip ci]"],
             cwd=BASE, capture_output=True
         )
-        push = subprocess.run(
-            ["git", "push"],
-            cwd=BASE, capture_output=True, text=True, timeout=60
-        )
-        if push.returncode == 0:
-            log("🚀 已推送到 GitHub")
-        else:
-            log(f"⚠️ 推送失败: {push.stderr[:200]}")
+        log("📦 已提交")
+    
+    # 无论是否有变更，都尝试 push（可能有 auto 的提交待推送）
+    push = subprocess.run(
+        ["git", "push"],
+        cwd=BASE, capture_output=True, text=True, timeout=60
+    )
+    if push.returncode == 0:
+        log("🚀 已推送到 GitHub")
+    else:
+        log(f"⚠️ 推送失败: {push.stderr[:200]}")
     
     # 清除代理
     subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
