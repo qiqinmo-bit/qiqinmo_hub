@@ -172,6 +172,14 @@ def stream():
 if __name__ == "__main__":
     # 修复 Flask 的 request 导入
     from flask import request
+
+    # 屏蔽 Werkzeug 开发服务器警告和请求日志
+    import logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    import warnings
+    warnings.filterwarnings('ignore', message='.*development server.*')
+
     print()
     print("=" * 45)
     print("  [仪表盘] 收图夹实时监控")
