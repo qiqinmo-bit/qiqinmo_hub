@@ -1,7 +1,7 @@
 {
   "知识版本": "2.0",
   "最后更新": "2026-06-12",
-  "总条目数": 7,
+  "总条目数": 8,
   "分类统计": {
     "01_Agent与AI编程": 1,
     "02_模型与API": 0,
@@ -15,7 +15,14 @@
       "title": "AI编程工具进化：从补全到Agent",
       "path": "03_知识文档/01_Agent与AI编程/AI编程工具进化：从补全到Agent.md",
       "date": "2026-06-09",
-      "keywords": ["Cursor", "Composer", "Agent模式", "AI编程", "Aider", "Cline"],
+      "keywords": [
+        "Cursor",
+        "Composer",
+        "Agent模式",
+        "AI编程",
+        "Aider",
+        "Cline"
+      ],
       "source": "02_灵感分析/2026-06-09_Cursor_AI编程技巧"
     },
     {
@@ -23,48 +30,84 @@
       "title": "测试：Cursor AI编程技巧",
       "path": "01_原始灵感\\2026-06-09_测试：Cursor_AI编程技巧",
       "date": "2026-06-12",
-      "keywords": ["Agent与AI编程", "OCR"]
+      "keywords": [
+        "Agent与AI编程",
+        "OCR"
+      ]
     },
     {
       "id": "entry_003",
       "title": "未命名灵感",
       "path": "01_原始灵感\\2026-06-09_未命名灵感",
       "date": "2026-06-12",
-      "keywords": ["工作流与自动化", "手动输入"]
+      "keywords": [
+        "工作流与自动化",
+        "手动输入"
+      ]
     },
     {
       "id": "entry_004",
       "title": "AI模型选择建议",
       "path": "01_原始灵感\\2026-06-12_AI模型选择建议",
       "date": "2026-06-12",
-      "keywords": ["模型与API", "OCR"]
+      "keywords": [
+        "模型与API",
+        "OCR"
+      ]
     },
     {
       "id": "entry_005",
       "title": "01:22",
       "path": "01_原始灵感\\2026-06-12_01_22",
       "date": "2026-06-12",
-      "keywords": ["模型与API", "OCR"]
+      "keywords": [
+        "模型与API",
+        "OCR"
+      ]
     },
     {
       "id": "entry_006",
       "title": "12:14",
       "path": "01_原始灵感\\2026-06-12_12_14",
       "date": "2026-06-12",
-      "keywords": ["模型与API", "OCR"]
+      "keywords": [
+        "模型与API",
+        "OCR"
+      ]
     },
     {
       "id": "entry_007",
       "title": "01:30",
       "path": "01_原始灵感\\2026-06-12_01_30",
       "date": "2026-06-12",
-      "keywords": ["Agent与AI编程", "手动输入"]
+      "keywords": [
+        "Agent与AI编程",
+        "手动输入"
+      ]
+    },
+    {
+      "id": "entry_008",
+      "title": "灵感_001",
+      "path": "01_原始灵感\\2026-06-12_灵感_001",
+      "date": "2026-06-12",
+      "keywords": [
+        "Agent与AI编程",
+        "手动输入"
+      ]
     }
   ],
   "标签云": {
-    "Cursor": 1, "Composer": 1, "Agent模式": 1, "AI编程": 1,
-    "Aider": 1, "Cline": 1, "Agent与AI编程": 2, "OCR": 4,
-    "工作流与自动化": 1, "手动输入": 2, "模型与API": 3
+    "Cursor": 1,
+    "Composer": 1,
+    "Agent模式": 1,
+    "AI编程": 1,
+    "Aider": 1,
+    "Cline": 1,
+    "Agent与AI编程": 3,
+    "OCR": 4,
+    "工作流与自动化": 1,
+    "手动输入": 3,
+    "模型与API": 3
   },
   "关联网络": [],
   "项目进度": {

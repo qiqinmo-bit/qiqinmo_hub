@@ -7,37 +7,66 @@
 
 流程:
   1. OCR 识别截图文字
-  2. 创建 description.md
-  3. 更新记忆索引 + 知识图谱
-  4. 自动 git push (配 Clash 代理)
+  2. 创建 description.md (序号命名)
+  3. MD5 去重
+  4. 更新记忆索引 + 知识图谱
+  5. 自动 git push (配 Clash 代理)
 """
 
-import sys, os, json, datetime, re, subprocess, shutil
+import sys, os, json, datetime, re, subprocess, shutil, hashlib
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEMORY_DIR = os.path.join(BASE, "_memory")
+COUNTER_FILE = os.path.join(MEMORY_DIR, "counter.txt")
+HASH_FILE = os.path.join(MEMORY_DIR, "processed_hashes.json")
 
 def log(msg):
     print(f"  {msg}")
 
-def slug(text):
-    s = text.strip()
-    s = re.sub(r'[\\/:*?"<>|]', '_', s)
-    s = s.replace(' ', '_').replace('\n', '_')
-    return s[:60]
-
 def today():
     return datetime.date.today().isoformat()
+
+# ── 计数器 + 去重 ───────────────────────────────────
+
+def get_next_serial():
+    try:
+        with open(COUNTER_FILE, "r") as f:
+            n = int(f.read().strip())
+    except:
+        n = 0
+    n += 1
+    with open(COUNTER_FILE, "w") as f:
+        f.write(str(n))
+    return f"{n:03d}"
+
+def get_image_hash(image_path):
+    h = hashlib.md5()
+    with open(image_path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def load_hashes():
+    try:
+        with open(HASH_FILE, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    except:
+        return set()
+
+def save_hash(h):
+    hashes = load_hashes()
+    hashes.add(h)
+    with open(HASH_FILE, "w", encoding="utf-8") as f:
+        json.dump(sorted(hashes), f, ensure_ascii=False)
 
 # ── 1. OCR ────────────────────────────────────────
 
 def do_ocr(image_path):
-    """用 rapidocr 识别图片文字"""
     from rapidocr_onnxruntime import RapidOCR
     engine = RapidOCR()
     result, elapse = engine(image_path)
     if not result:
         return "", []
-    
     texts = []
     lines = []
     for box, text, score in result:
@@ -50,15 +79,10 @@ def do_ocr(image_path):
 
 def save_inspiration(image_path, ocr_text, lines):
     date = today()
-    # 从 OCR 内容推断标题
-    title = "灵感记录"
-    if ocr_text:
-        # 取第一句有意义的文字做标题
-        first = [l for l in ocr_text.split("\n") if len(l) > 4]
-        if first:
-            title = first[0][:30]
+    serial = get_next_serial()
+    title = f"灵感_{serial}"
     
-    folder_name = f"{date}_{slug(title)}"
+    folder_name = f"{date}_{title}"
     folder = os.path.join(BASE, "01_原始灵感", folder_name)
     os.makedirs(folder, exist_ok=True)
 
@@ -67,7 +91,7 @@ def save_inspiration(image_path, ocr_text, lines):
         fname = os.path.basename(image_path)
         dest = os.path.join(folder, fname)
         shutil.copy2(image_path, dest)
-        log(f"📸 截图已复制")
+        log(f"[复制] 截图已复制")
 
     # 写 description.md
     desc = [
@@ -81,90 +105,72 @@ def save_inspiration(image_path, ocr_text, lines):
         "",
     ]
     if lines:
-        desc.append("> 📝 OCR 提取文字：")
+        desc.append("> OCR 提取文字：")
         desc.append(">")
         for l in lines:
             desc.append(f"> {l.split('] ', 1)[-1] if '] ' in l else l}")
         desc.append("")
-    
+    if ocr_text:
+        preview = ocr_text[:200].replace("\n", " ")
+        desc.append(f"\n> 原文摘要: {preview}...")
+
     with open(os.path.join(folder, "description.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(desc))
-    
-    log(f"✅ 灵感已保存: {folder_name}")
+
+    log(f"[保存] {folder_name}")
     return folder, title
 
 # ── 3. 自动更新 ────────────────────────────────────
 
 def auto_update():
-    """调用 --auto 更新索引和图谱"""
     result = subprocess.run(
         [sys.executable, os.path.join(BASE, "_scripts", "process_inspiration.py"), "--auto"],
         cwd=BASE, capture_output=True, text=True
     )
     print(result.stdout)
     if result.returncode != 0:
-        log(f"⚠️ auto 更新异常:\n{result.stderr}")
+        log(f"[异常] auto 更新:\n{result.stderr}")
 
 # ── 4. Git push ────────────────────────────────────
 
 def git_push():
-    """配置代理并推送"""
-    # 尝试常见 Clash 端口
     proxy_ports = [7897, 7890, 7891]
-    proxy_set = False
     for port in proxy_ports:
-        test = subprocess.run(
-            ["git", "config", "--local", "http.proxy", f"http://127.0.0.1:{port}"],
-            cwd=BASE, capture_output=True
-        )
-        subprocess.run(
-            ["git", "config", "--local", "https.proxy", f"http://127.0.0.1:{port}"],
-            cwd=BASE, capture_output=True
-        )
-        # 测试连接
+        subprocess.run(["git", "config", "--local", "http.proxy", f"http://127.0.0.1:{port}"],
+                      cwd=BASE, capture_output=True)
+        subprocess.run(["git", "config", "--local", "https.proxy", f"http://127.0.0.1:{port}"],
+                      cwd=BASE, capture_output=True)
         test = subprocess.run(
             ["git", "fetch", "--dry-run"],
             cwd=BASE, capture_output=True, text=True, timeout=10
         )
         if test.returncode == 0 or "fatal" not in test.stderr.lower():
-            proxy_set = True
-            log(f"🌐 代理 :{port} 可用")
+            log(f"[代理] 端口 {port} 可用")
             break
-        else:
-            # 清除尝试的代理
-            subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
-            subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
+        subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
+        subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
 
-    # git add + commit + push
     subprocess.run(["git", "add", "-A"], cwd=BASE, capture_output=True)
-    
-    result = subprocess.run(
-        ["git", "diff", "--cached", "--quiet"],
-        cwd=BASE, capture_output=True
-    )
+    result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=BASE, capture_output=True)
     has_changes = result.returncode != 0
-    
+
     if has_changes:
         subprocess.run(
-            ["git", "commit", "-m", f"📸 灵感: 截图自动入库 [skip ci]"],
+            ["git", "commit", "-m", f"一键: {title if 'title' in dir() else '截图'} [skip ci]"],
             cwd=BASE, capture_output=True
         )
-        log("📦 已提交")
-    
-    # 无论是否有变更，都尝试 push（可能有 auto 的提交待推送）
+
     push = subprocess.run(
         ["git", "push"],
         cwd=BASE, capture_output=True, text=True, timeout=60
     )
     if push.returncode == 0:
-        log("🚀 已推送到 GitHub")
+        log("[推送] 成功")
     else:
-        log(f"⚠️ 推送失败: {push.stderr[:200]}")
-    
-    # 清除代理
+        log(f"[!!] 推送失败: {push.stderr[:200]}")
+
     subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
     subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
-
 
 # ── 入口 ────────────────────────────────────────────
 
@@ -176,39 +182,42 @@ def main():
 
     image_path = sys.argv[1]
     if not os.path.exists(image_path):
-        print(f"❌ 文件不存在: {image_path}")
+        print(f"[!!] 文件不存在: {image_path}")
         sys.exit(1)
 
+    # MD5 去重
+    img_hash = get_image_hash(image_path)
+    existing = load_hashes()
+    if img_hash in existing:
+        print(f"\n[跳过] 图片已处理过 (MD5: {img_hash[:12]}...)")
+        return
+
     print("\n" + "=" * 45)
-    print("  🧠  一键灵感处理")
+    print("  一键灵感处理")
     print("=" * 45)
 
-    # Step 1: OCR
-    print("\n① OCR 识别...")
+    print("\n1. OCR 识别...")
     ocr_text, lines = do_ocr(image_path)
     if ocr_text:
-        log(f"✅ 识别到 {len(lines)} 段文字")
+        log(f"[OK] 识别到 {len(lines)} 段文字")
     else:
-        log("⚠️ 未识别到文字，将创建空灵感")
+        log("[!!] 未识别到文字")
 
-    # Step 2: 入库
-    print("\n② 写入灵感...")
+    print("\n2. 写入灵感...")
     folder, title = save_inspiration(image_path, ocr_text, lines)
+    save_hash(img_hash)
 
-    # Step 3: 更新索引
-    print("\n③ 更新索引...")
+    print("\n3. 更新索引...")
     auto_update()
 
-    # Step 4: 推送
-    print("\n④ 推送到 GitHub...")
+    print("\n4. 推送到 GitHub...")
     git_push()
 
     print("\n" + "=" * 45)
-    print("  ✅  全部完成！")
+    print("  全部完成！")
     print("=" * 45)
-    print(f"\n📂 灵感位置: 01_原始灵感/{os.path.basename(folder)}")
-    print("🌐 GitHub Pages: https://qiqinmo-bit.github.io/qiqinmo_hub/")
-    print("\n🔄 GitHub Actions 正在后台自动分析...")
+    print(f"\n  灵感: 01_原始灵感/{os.path.basename(folder)}")
+    print("  GitHub Actions 后台自动分析中...\n")
 
 if __name__ == "__main__":
     main()

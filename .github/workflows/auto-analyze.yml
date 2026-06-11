@@ -1,7 +1,7 @@
 # ============================================================
 # 🤖 日常灵感工作流 — AI 自动分析
 # ============================================================
-# 当新灵感入库时，自动调用 AI 进行分析。
+# 当新灵感入库时，自动调用 AI 进行分析并保存结果。
 #
 # 成本策略（三档回退）:
 #   1️⃣ GitHub Models (免费) — 用 GITHUB_TOKEN，零成本
@@ -51,7 +51,6 @@ jobs:
           # 找最新的 description.md
           latest=$(find 01_原始灵感 -name "description.md" -newer .git/HEAD 2>/dev/null | head -1)
           if [ -z "$latest" ]; then
-            # fallback: 取最新的
             latest=$(find 01_原始灵感 -name "description.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
           fi
           echo "latest=$latest" >> $GITHUB_OUTPUT
@@ -73,20 +72,56 @@ jobs:
           echo "$result" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: 💾 保存分析结果
+      - name: 💾 保存分析结果到 02_灵感分析/
         if: steps.analyze.outputs.result != ''
         run: |
-          echo '${{ steps.analyze.outputs.result }}' | python -c "
+          python -c "
 import sys, json, os
+from datetime import date
+
 result = json.loads(sys.stdin.read())
 if not result.get('success'):
     print('⚠️ 分析失败，跳过')
     sys.exit(0)
 
-print(f\"🎯 使用模型: {result.get('tier')} / {result.get('model')}\")
-print(f\"📂 建议分类: {result.get('category')}\")
-print(f\"🏷️ 关键词: {result.get('keywords')}\")
-"
+# 从 description.md 路径推导灵感目录名
+desc_path = '${{ steps.find_inspiration.outputs.latest }}'
+folder_name = os.path.basename(os.path.dirname(desc_path))
+
+# 创建 02_灵感分析/ 目录
+target_dir = os.path.join('02_灵感分析', folder_name)
+os.makedirs(target_dir, exist_ok=True)
+
+content = result.get('content', '')
+keywords = result.get('keywords', [])
+category = result.get('category', '')
+tier = result.get('tier', '')
+model = result.get('model', '')
+
+# 生成 analysis.md
+analysis = f'''# 灵感分析
+
+**日期**: {date.today().isoformat()}
+**来源**: 01_原始灵感/{folder_name}
+**分析引擎**: {tier} ({model})
+**建议分类**: {category}
+**关键词**: {\", \".join(keywords)}
+
+---
+
+## 分析结果
+
+{content}
+'''
+
+path = os.path.join(target_dir, 'analysis.md')
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(analysis)
+
+print(f'✅ 分析结果已保存: {path}')
+print(f'📂 建议分类: {category}')
+print(f'🏷️ 关键词: {', '.join(keywords)}')
+" << '${{ steps.analyze.outputs.result }}'
 
       - name: 📦 提交分析结果
         run: |

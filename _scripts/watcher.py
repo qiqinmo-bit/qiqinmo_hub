@@ -11,7 +11,7 @@
   按 Ctrl+C 停止
 """
 
-import sys, os, datetime, re, subprocess, shutil, time
+import sys, os, datetime, re, subprocess, shutil, time, hashlib, json
 
 # Windows GBK 终端兼容
 if sys.stdout.encoding and sys.stdout.encoding.lower() in ("gbk", "gb2312"):
@@ -19,17 +19,54 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() in ("gbk", "gb2312"):
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WATCH_DIR = os.path.join(BASE, "收图夹")
+MEMORY_DIR = os.path.join(BASE, "_memory")
+COUNTER_FILE = os.path.join(MEMORY_DIR, "counter.txt")
+HASH_FILE = os.path.join(MEMORY_DIR, "processed_hashes.json")
 os.makedirs(WATCH_DIR, exist_ok=True)
+os.makedirs(MEMORY_DIR, exist_ok=True)
+
+# ── 计数器 + 去重 ───────────────────────────────────
+
+def get_next_serial():
+    """获取下一个序号 (001, 002...)，持久化到 counter.txt"""
+    try:
+        with open(COUNTER_FILE, "r") as f:
+            n = int(f.read().strip())
+    except:
+        n = 0
+    n += 1
+    with open(COUNTER_FILE, "w") as f:
+        f.write(str(n))
+    return f"{n:03d}"
+
+def get_image_hash(image_path):
+    """计算图片的 MD5 哈希"""
+    h = hashlib.md5()
+    with open(image_path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def load_hashes():
+    """加载已处理的哈希集合"""
+    try:
+        with open(HASH_FILE, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    except:
+        return set()
+
+def save_hash(h):
+    """保存新哈希"""
+    hashes = load_hashes()
+    hashes.add(h)
+    with open(HASH_FILE, "w", encoding="utf-8") as f:
+        json.dump(sorted(hashes), f, ensure_ascii=False)
+
+# ── 工具函数 ────────────────────────────────────────
 
 def log(msg):
     t = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"[{t}] {msg}", flush=True)
-
-def slug(text):
-    s = text.strip()
-    s = re.sub(r'[\\/:*?"<>|]', '_', s)
-    s = s.replace(' ', '_').replace('\n', '_')
-    return s[:60]
 
 def today():
     return datetime.date.today().isoformat()
@@ -59,6 +96,15 @@ def process_image(image_path):
     fname = os.path.basename(image_path)
     log(f"[处理] {fname}")
 
+    # ── MD5 去重 ──
+    img_hash = get_image_hash(image_path)
+    existing = load_hashes()
+    if img_hash in existing:
+        log(f"[跳过] 图片已处理过 (MD5: {img_hash[:12]}...)")
+        os.remove(image_path)
+        log("[清理] 已删除重复图片")
+        return
+
     # OCR
     ocr_text, lines = do_ocr(image_path)
     if ocr_text:
@@ -66,15 +112,10 @@ def process_image(image_path):
     else:
         log("[!!] 未识别到文字")
 
-    # 提取标题
-    title = "灵感记录"
-    if ocr_text:
-        first = [l for l in ocr_text.split("\n") if len(l) > 4]
-        if first:
-            title = first[0][:30]
-
-    # 创建灵感目录
-    folder_name = f"{today()}_{slug(title)}"
+    # ── 序号命名 ──
+    serial = get_next_serial()
+    title = f"灵感_{serial}"
+    folder_name = f"{today()}_{title}"
     folder = os.path.join(BASE, "01_原始灵感", folder_name)
     os.makedirs(folder, exist_ok=True)
 
@@ -99,10 +140,17 @@ def process_image(image_path):
         for l in lines:
             desc.append(f"> {l.split('] ', 1)[-1] if '] ' in l else l}")
         desc.append("")
+    # 加原文片段方便看
+    if ocr_text:
+        preview = ocr_text[:200].replace("\n", " ")
+        desc.append(f"\n> 原文摘要: {preview}...")
 
     desc_path = os.path.join(folder, "description.md")
     with open(desc_path, "w", encoding="utf-8") as f:
         f.write("\n".join(desc))
+
+    # 记录哈希
+    save_hash(img_hash)
 
     log(f"[保存] {folder_name}")
 
@@ -125,7 +173,6 @@ def process_image(image_path):
             cwd=BASE, capture_output=True
         )
 
-    # 尝试代理推送
     pushed = False
     for port in [7897, 7890, 7891]:
         subprocess.run(["git", "config", "--local", "http.proxy", f"http://127.0.0.1:{port}"], 
@@ -161,11 +208,10 @@ def main():
     print("  [收图夹] 自动监听中 (轮询模式)")
     print("=" * 45)
     print(f"\n  把截图放入: {WATCH_DIR}")
-    print(f"\n  每 5 秒检测新文件")
-    print(f"\n  处理流程: OCR > 入库 > 推送 GitHub")
-    print(f"\n  按 Ctrl+C 停止\n")
+    print(f"\n  每 5 秒检测新文件  |  序号命名  |  MD5 去重")
+    print(f"\n  处理流程: OCR > 入库 > 推送 GitHub\n")
 
-    # 记录已处理的文件名
+    # 清理重复文件名
     processed = set()
 
     while True:
@@ -179,7 +225,6 @@ def main():
                 if fname in processed:
                     continue
 
-                # 避免文件还在写入中
                 try:
                     size = os.path.getsize(fpath)
                 except:
