@@ -1,7 +1,7 @@
 {
   "知识版本": "2.0",
   "最后更新": "2026-06-12",
-  "总条目数": 8,
+  "总条目数": 7,
   "分类统计": {
     "01_Agent与AI编程": 1,
     "02_模型与API": 0,
@@ -15,14 +15,7 @@
       "title": "AI编程工具进化：从补全到Agent",
       "path": "03_知识文档/01_Agent与AI编程/AI编程工具进化：从补全到Agent.md",
       "date": "2026-06-09",
-      "keywords": [
-        "Cursor",
-        "Composer",
-        "Agent模式",
-        "AI编程",
-        "Aider",
-        "Cline"
-      ],
+      "keywords": ["Cursor", "Composer", "Agent模式", "AI编程", "Aider", "Cline"],
       "source": "02_灵感分析/2026-06-09_Cursor_AI编程技巧"
     },
     {
@@ -30,103 +23,61 @@
       "title": "测试：Cursor AI编程技巧",
       "path": "01_原始灵感\\2026-06-09_测试：Cursor_AI编程技巧",
       "date": "2026-06-12",
-      "keywords": [
-        "Agent与AI编程",
-        "OCR"
-      ]
+      "keywords": ["Agent与AI编程", "OCR"]
     },
     {
       "id": "entry_003",
       "title": "未命名灵感",
       "path": "01_原始灵感\\2026-06-09_未命名灵感",
       "date": "2026-06-12",
-      "keywords": [
-        "工作流与自动化",
-        "手动输入"
-      ]
+      "keywords": ["工作流与自动化", "手动输入"]
     },
     {
       "id": "entry_004",
-      "title": "[待分析] [OCR 未安装] 请手动查看图片: 01_原始灵感/202",
-      "path": "01_原始灵感\\2026-06-12_[OCR_未安装]_请手动查看图片__01_原始灵感_202",
-      "date": "2026-06-12",
-      "keywords": [
-        "fallback",
-        "待分析"
-      ]
-    },
-    {
-      "id": "entry_005",
       "title": "AI模型选择建议",
       "path": "01_原始灵感\\2026-06-12_AI模型选择建议",
       "date": "2026-06-12",
-      "keywords": [
-        "模型与API",
-        "OCR"
-      ]
+      "keywords": ["模型与API", "OCR"]
     },
     {
-      "id": "entry_006",
+      "id": "entry_005",
       "title": "01:22",
       "path": "01_原始灵感\\2026-06-12_01_22",
       "date": "2026-06-12",
-      "keywords": [
-        "模型与API",
-        "OCR"
-      ]
+      "keywords": ["模型与API", "OCR"]
     },
     {
-      "id": "entry_007",
+      "id": "entry_006",
       "title": "12:14",
       "path": "01_原始灵感\\2026-06-12_12_14",
       "date": "2026-06-12",
-      "keywords": [
-        "模型与API",
-        "OCR"
-      ]
+      "keywords": ["模型与API", "OCR"]
     },
     {
-      "id": "entry_008",
+      "id": "entry_007",
       "title": "01:30",
       "path": "01_原始灵感\\2026-06-12_01_30",
       "date": "2026-06-12",
-      "keywords": [
-        "Agent与AI编程",
-        "手动输入"
-      ]
+      "keywords": ["Agent与AI编程", "手动输入"]
     }
   ],
   "标签云": {
-    "Cursor": 1,
-    "Composer": 1,
-    "Agent模式": 1,
-    "AI编程": 1,
-    "Aider": 1,
-    "Cline": 1,
-    "Agent与AI编程": 2,
-    "OCR": 4,
-    "工作流与自动化": 1,
-    "手动输入": 2,
-    "fallback": 1,
-    "待分析": 1,
-    "模型与API": 3
+    "Cursor": 1, "Composer": 1, "Agent模式": 1, "AI编程": 1,
+    "Aider": 1, "Cline": 1, "Agent与AI编程": 2, "OCR": 4,
+    "工作流与自动化": 1, "手动输入": 2, "模型与API": 3
   },
   "关联网络": [],
   "项目进度": {
-    "阶段": "三层架构搭建完成，飞书集成就绪待上线",
+    "阶段": "收图夹 + GitHub Actions 自动化上线运行",
     "完成项": [
-      "n8n 工作流已激活",
+      "收图夹自动监听+OCR+入库+推送",
       "GitHub Actions 3个工作流就绪",
-      "飞书 Bot 服务运行中",
-      "飞书 CLI 已安装配置",
-      "知识库第1篇文档已入库",
-      "SOP/AGENTS/README 文档完成",
-      "git 已推送至 GitHub"
+      "知识库 7 篇条目已入库",
+      "文档: README / SOP / AGENTS 完成"
     ],
     "待办": [
-      "飞书开放平台配置事件订阅+回调+权限+发布",
-      "natapp 内网穿透",
-      "lark-cli auth login 用户授权"
+      "更多灵感分析和知识文档撰写",
+      "GitHub Pages 知识图谱正式上线"
     ]
   }
 }
