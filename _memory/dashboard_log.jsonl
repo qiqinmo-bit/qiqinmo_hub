@@ -16,3 +16,8 @@
 {"time": "02:02:23", "type": "process", "msg": "处理: img_v3_0212j_709010d0-4b1e-44b8-8a63-cb209a97977g.jpg"}
 {"time": "02:02:34", "type": "info", "msg": "OCR识别: 37段文字"}
 {"time": "02:02:34", "type": "save", "msg": "入库: 灵感_004 (37段)"}
+{"time": "02:02:43", "type": "push", "msg": "推送到GitHub成功"}
+{"time": "02:02:43", "type": "complete", "msg": "完成: 灵感_004"}
+{"time": "02:02:43", "type": "process", "msg": "处理: img_v3_0212j_c1a63e99-2a0f-41c2-b19d-44e3d3623bbg.jpg"}
+{"time": "02:02:54", "type": "info", "msg": "OCR识别: 28段文字"}
+{"time": "02:02:54", "type": "save", "msg": "入库: 灵感_005 (28段)"}
