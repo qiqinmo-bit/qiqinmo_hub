@@ -156,7 +156,7 @@ def git_push():
 
     if has_changes:
         subprocess.run(
-            ["git", "commit", "-m", f"一键: {title if 'title' in dir() else '截图'} [skip ci]"],
+            ["git", "commit", "-m", f"一键截图"],
             cwd=BASE, capture_output=True
         )
 

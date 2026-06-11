@@ -189,7 +189,7 @@ def process_image(image_path):
     result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=BASE, capture_output=True)
     if result.returncode != 0:
         subprocess.run(
-            ["git", "commit", "-m", f"收图夹: {title} [skip ci]"],
+            ["git", "commit", "-m", f"收图夹: {title}"],
             cwd=BASE, capture_output=True
         )
 
