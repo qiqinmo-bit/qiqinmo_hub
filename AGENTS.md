@@ -81,6 +81,30 @@
 
 ---
 
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked on GitHub Issues for `qiqinmo-bit/qiqinmo_hub`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+| 角色 | 标签 |
+|------|------|
+| 需要评估 | `待评估` |
+| 等待回复 | `待回复` |
+| AI 可处理 | `AI可处理` |
+| 需人工处理 | `需人工` |
+| 不处理 | `不处理` |
+
+See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context layout. `CONTEXT-MAP.md` at root points to per-context `CONTEXT.md` files. ADRs live in `docs/adr/`. See `docs/agents/domain.md`.
+
+---
+
 ## 🔧 脚本工具参考
 
 | 脚本 | 用途 | 谁来用 |

@@ -1,18 +1,4 @@
-# ============================================================
-# 🧠 日常灵感工作流 — 自动处理
-# ============================================================
-# 触发条件:
-#   - Push 到灵感/分析/知识文档目录时 (精确触发，不空跑)
-#   - 手动触发 (workflow_dispatch)
-#   - [不设定时] 避免浪费 Actions 分钟数
-#
-# 成本优化:
-#   - concurrency: 新 push 自动取消旧排队，分钟数不浪费
-#   - paths: 只在实际有内容变更时才跑
-#   - paths-ignore: 避免 auto-process 自己的提交循环触发
-# ============================================================
-
-name: 🧠 灵感自动处理
+name: Insp Process
 
 on:
   push:
@@ -34,38 +20,28 @@ permissions:
   contents: write
 
 jobs:
-  auto-process:
+  process:
     runs-on: ubuntu-latest
     steps:
-      - name: ⬇️ 检出仓库
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
-      - name: 🐍 设置 Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
-      - name: 🔄 自动更新索引与图谱
-        id: process
-        run: |
-          python _scripts/process_inspiration.py --auto
+      - name: Run auto-update
+        run: python _scripts/process_inspiration.py --auto
 
-      - name: 📊 查看更新后状态
+      - name: Commit changes
         run: |
-          python _scripts/process_inspiration.py status
-
-      - name: 📦 提交变更
-        run: |
-          git config user.name "灵感机器人"
-          git config user.email "bot@inspiration-workflow"
+          git config user.name "bot"
+          git config user.email "bot@localhost"
           git add -A
           if git diff --cached --quiet; then
-            echo "ℹ️  无变更需要提交"
+            echo "no changes"
           else
-            git commit -m "🤖 auto: 更新灵感索引与知识图谱 [skip ci]"
+            git commit -m "auto: update index & graph [skip ci]"
             git push
-            echo "✅ 已提交并推送"
           fi
