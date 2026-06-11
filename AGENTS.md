@@ -10,8 +10,8 @@
 ┌─────────────────────────────────────────────────────────────┐
 │  🌀 自动化层 (n8n) — 数据抓取                               │
 │                                                             │
-│  · 定时抓 B站热门/评论区 → 写入 01_原始灵感/                  │
-│  · 监听本地截图文件 → PaddleOCR 提取文字                     │
+│  · 定时抓 B站热门 → 写入 01_原始灵感/                        │
+│  · 收图夹轮询监听 → rapidocr 提取文字                        │
 │  · 调用 webhook_server.py 或直写 JSON 到仓库                 │
 ├─────────────────────────────────────────────────────────────┤
 │  ⚙️  处理层 (GitHub Actions) — 索引更新                      │
@@ -20,7 +20,7 @@
 │  · 运行 process_inspiration.py --auto                        │
 │  · 更新 _memory/memory_index.json + 04_知识网络/graph_data   │
 ├─────────────────────────────────────────────────────────────┤
-│  🧠 决策层 (Reasonix/你) — 分析+写作                         │
+│  🧠 决策层 (AI) — 分析+写作                                  │
 │                                                             │
 │  · 读取 description.md → 分析技术要点                        │
 │  · 搜索开源方案 → 撰写知识文档 → 建立双向链接                 │
@@ -36,7 +36,7 @@
 
 ### Step 1 — 定位灵感源
 - 检查 `01_原始灵感/` 中最新的 `description.md`
-- 如果有 OCR 提取的文字（`> 📝 OCR 提取文字`），直接阅读
+- 如果有 OCR 提取的文字（`> OCR 提取文字`），直接阅读
 - 如果只有截图（`.jpg/.png`），询问用户描述或尝试 OCR
 
 ### Step 2 — 分析梳理
@@ -85,7 +85,8 @@
 
 | 脚本 | 用途 | 谁来用 |
 |------|------|--------|
-| `_scripts/ocr_helper.py` | 截图→文字 (PaddleOCR) | n8n / 你手动调用 |
 | `_scripts/process_inspiration.py` | 核心处理（n8n/Auto/手动） | GitHub Actions / n8n |
+| `_scripts/one_click.py` | 一键处理：OCR→入库→git push | 用户拖拽/命令行 |
+| `_scripts/watcher.py` | 收图夹轮询监听 | 后台常驻 |
 | `_scripts/webhook_server.py` | n8n 本地 webhook 接收器 | n8n |
 | `_scripts/n8n_workflow.json` | 可导入 n8n 的工作流模板 | 用户导入 n8n |
