@@ -11,11 +11,14 @@
   按 Ctrl+C 停止
 """
 
-import sys, os, datetime, re, subprocess, shutil, time, hashlib, json
+import sys, os, datetime, re, subprocess, shutil, time, hashlib, json, warnings
 
 # Windows GBK 终端兼容
 if sys.stdout.encoding and sys.stdout.encoding.lower() in ("gbk", "gb2312"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+# 屏蔽 ONNX Runtime 的 Windows 版本警告（不影响功能）
+warnings.filterwarnings("ignore", message=".*Unsupported Windows version.*")
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WATCH_DIR = os.path.join(BASE, "收图夹")

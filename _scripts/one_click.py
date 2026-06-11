@@ -13,7 +13,10 @@
   5. 自动 git push (配 Clash 代理)
 """
 
-import sys, os, json, datetime, re, subprocess, shutil, hashlib
+import sys, os, json, datetime, re, subprocess, shutil, hashlib, warnings
+
+# 屏蔽 ONNX Runtime 的 Windows 版本警告
+warnings.filterwarnings("ignore", message=".*Unsupported Windows version.*")
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEMORY_DIR = os.path.join(BASE, "_memory")
