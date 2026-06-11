@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>收图夹 — 实时监控</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── 顶部状态栏 ── */
+  .header {
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .header .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-left: 8px;
+  }
+  .badge.running { background: #238636; color: #fff; }
+  .badge.stopped { background: #da3633; color: #fff; }
+  .badge.processing { background: #d29922; color: #fff; }
+
+  .stats {
+    display: flex;
+    gap: 20px;
+  }
+  .stat-item {
+    text-align: center;
+  }
+  .stat-item .num {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .stat-item .label {
+    font-size: 11px;
+    color: #8b949e;
+    margin-top: 2px;
+  }
+
+  /* ── 日志区 ── */
+  .log-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 24px 24px;
+    font-family: "Cascadia Code", "JetBrains Mono", "Fira Code", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .log-area .log-entry {
+    padding: 2px 0;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    gap: 8px;
+  }
+  .log-time {
+    color: #484f58;
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+  .log-msg {
+    word-break: break-all;
+  }
+
+  /* 颜色 */
+  .log-msg.ok { color: #3fb950; }
+  .log-msg.info { color: #58a6ff; }
+  .log-msg.warn { color: #d29922; }
+  .log-msg.err { color: #f85149; }
+  .log-msg.save { color: #bc8cff; }
+  .log-msg.push { color: #79c0ff; }
+  .log-msg.skip { color: #8b949e; }
+  .log-msg.clean { color: #484f58; }
+
+  /* ── 底部 ── */
+  .footer {
+    background: #161b22;
+    border-top: 1px solid #30363d;
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .footer a { color: #58a6ff; text-decoration: none; }
+
+  /* ── 空状态 ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #484f58;
+    gap: 12px;
+  }
+  .empty-state .icon { font-size: 48px; }
+  .empty-state .hint { font-size: 14px; }
+
+  @media (max-width: 600px) {
+    .header { padding: 12px 16px; }
+    .stats { gap: 12px; }
+    .stat-item .num { font-size: 18px; }
+    .log-area { padding: 8px 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<div class="header">
+  <div>
+    <span style="font-size:20px;">📸</span>
+    <span style="font-weight:600;margin-left:6px;">收图夹监控</span>
+    <span class="badge running" id="statusBadge">运行中</span>
+  </div>
+  <div class="stats">
+    <div class="stat-item">
+      <div class="num" id="todayCount">0</div>
+      <div class="label">今日处理</div>
+    </div>
+    <div class="stat-item">
+      <div class="num" id="totalEntries">0</div>
+      <div class="label">总条目</div>
+    </div>
+    <div class="stat-item">
+      <div class="num" id="uptime">-</div>
+      <div class="label">状态</div>
+    </div>
+  </div>
+</div>
+
+<!-- 日志 -->
+<div class="log-area" id="logContainer">
+  <div class="empty-state" id="emptyState">
+    <div class="icon">⏳</div>
+    <div class="hint">等待收图夹处理截图...</div>
+    <div style="font-size:12px;color:#30363d;">把截图放进 收图夹/ 文件夹</div>
+  </div>
+</div>
+
+<!-- 底部 -->
+<div class="footer">
+  <span>收图夹: D:\Codex\日常灵感工作流\收图夹\</span>
+  <span><a href="https://github.com/qiqinmo-bit/qiqinmo_hub" target="_blank">GitHub</a></span>
+</div>
+
+<script>
+// ── 日志类型 → CSS class ──
+function msgClass(log) {
+  const type = log.type || '';
+  const msg = (log.msg || '').toLowerCase();
+  if (type === 'complete') return 'ok';
+  if (type === 'skip') return 'skip';
+  if (type === 'error') return 'err';
+  if (type === 'push') return 'push';
+  if (type === 'save') return 'save';
+  if (type === 'clean') return 'clean';
+  if (type === 'warn') return 'warn';
+  if (msg.includes('成功') || msg.includes('已完成') || msg.includes('完成')) return 'ok';
+  if (msg.includes('错误') || msg.includes('失败') || msg.includes('跳过')) return 'err';
+  if (msg.includes('推送')) return 'push';
+  if (msg.includes('保存') || msg.includes('入库')) return 'save';
+  if (msg.includes('发现') || msg.includes('处理')) return 'info';
+  if (msg.includes('清理')) return 'clean';
+  return 'info';
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ── 添加一条日志 ──
+const logContainer = document.getElementById('logContainer');
+const emptyState = document.getElementById('emptyState');
+let logCount = 0;
+
+function addLog(log) {
+  if (emptyState) emptyState.remove();
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `
+    <span class="log-time">${escapeHtml(log.time || '??:??:??')}</span>
+    <span class="log-msg ${msgClass(log)}">${escapeHtml(log.msg || '')}</span>
+  `;
+  logContainer.appendChild(entry);
+  logCount++;
+
+  // 自动滚动到底部
+  logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+// ── 加载历史日志 ──
+async function loadLogs() {
+  try {
+    const resp = await fetch('/api/logs?tail=100');
+    const logs = await resp.json();
+    for (const log of logs) {
+      addLog(log);
+    }
+  } catch(e) {}
+}
+
+// ── 更新状态 ──
+async function updateStatus() {
+  try {
+    const resp = await fetch('/api/status');
+    const s = await resp.json();
+    document.getElementById('todayCount').textContent = s.today;
+    document.getElementById('totalEntries').textContent = s.total_entries;
+
+    const badge = document.getElementById('statusBadge');
+    if (s.watcher === 'running') {
+      badge.textContent = '运行中';
+      badge.className = 'badge running';
+      document.getElementById('uptime').textContent = '活跃';
+    } else {
+      badge.textContent = '已停止';
+      badge.className = 'badge stopped';
+      document.getElementById('uptime').textContent = '离线';
+    }
+  } catch(e) {}
+}
+
+// ── SSE 实时推送 ──
+let lastLogs = [];
+
+function connectSSE() {
+  const evtSource = new EventSource('/stream');
+  evtSource.onmessage = function(e) {
+    try {
+      const logs = JSON.parse(e.data);
+      // 只新增不重复的
+      for (const log of logs) {
+        const key = log.time + log.msg;
+        if (!lastLogs.includes(key)) {
+          lastLogs.push(key);
+          if (lastLogs.length > 200) lastLogs.shift();
+          addLog(log);
+        }
+      }
+      updateStatus();
+    } catch(e) {}
+  };
+  evtSource.onerror = function() {
+    // 断线重连
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+// ── 定时轮询（SSE 后备） ──
+let lastLogTime = '';
+setInterval(async () => {
+  try {
+    const resp = await fetch('/api/logs?tail=5');
+    const logs = await resp.json();
+    for (const log of logs) {
+      if (log.time > lastLogTime && !lastLogs.includes(log.time + log.msg)) {
+        lastLogTime = log.time;
+        lastLogs.push(log.time + log.msg);
+        addLog(log);
+      }
+    }
+    updateStatus();
+  } catch(e) {}
+}, 3000);
+
+// ── 启动 ──
+loadLogs();
+updateStatus();
+connectSSE();
+</script>
+</body>
+</html>

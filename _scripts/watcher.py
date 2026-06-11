@@ -25,6 +25,21 @@ HASH_FILE = os.path.join(MEMORY_DIR, "processed_hashes.json")
 os.makedirs(WATCH_DIR, exist_ok=True)
 os.makedirs(MEMORY_DIR, exist_ok=True)
 
+DASHBOARD_LOG = os.path.join(MEMORY_DIR, "dashboard_log.jsonl")
+
+def write_log(log_type, msg):
+    """写结构化日志供仪表盘读取"""
+    try:
+        entry = {
+            "time": datetime.datetime.now().strftime("%H:%M:%S"),
+            "type": log_type,
+            "msg": msg
+        }
+        with open(DASHBOARD_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except:
+        pass
+
 # ── 计数器 + 去重 ───────────────────────────────────
 
 def get_next_serial():
@@ -95,12 +110,14 @@ def do_ocr(image_path):
 def process_image(image_path):
     fname = os.path.basename(image_path)
     log(f"[处理] {fname}")
+    write_log("process", f"处理: {fname}")
 
     # ── MD5 去重 ──
     img_hash = get_image_hash(image_path)
     existing = load_hashes()
     if img_hash in existing:
         log(f"[跳过] 图片已处理过 (MD5: {img_hash[:12]}...)")
+        write_log("skip", f"跳过(重复): {fname}")
         os.remove(image_path)
         log("[清理] 已删除重复图片")
         return
@@ -109,8 +126,10 @@ def process_image(image_path):
     ocr_text, lines = do_ocr(image_path)
     if ocr_text:
         log(f"[OK] 识别到 {len(lines)} 段文字")
+        write_log("info", f"OCR识别: {len(lines)}段文字")
     else:
         log("[!!] 未识别到文字")
+        write_log("warn", "未识别到文字")
 
     # ── 序号命名 ──
     serial = get_next_serial()
@@ -153,6 +172,7 @@ def process_image(image_path):
     save_hash(img_hash)
 
     log(f"[保存] {folder_name}")
+    write_log("save", f"入库: {title} ({len(lines)}段)")
 
     # 更新索引
     env = os.environ.copy()
@@ -185,10 +205,12 @@ def process_image(image_path):
         subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
         if push.returncode == 0:
             log(f"[推送] 成功 (端口 {port})")
+            write_log("push", f"推送到GitHub成功")
             pushed = True
             break
     if not pushed:
         log("[!!] 推送失败，稍后手动 git push")
+        write_log("err", "Git推送失败")
 
     # 删除原图
     try:
@@ -198,6 +220,7 @@ def process_image(image_path):
         pass
 
     log(f"[完成] {title}")
+    write_log("complete", f"完成: {title}")
     print("-" * 40, flush=True)
 
 # ── 主程序 ─────────────────────────────────────────
