@@ -117,6 +117,62 @@
       ],
       "path": "01_原始灵感\\2026-06-09_未命名灵感",
       "date": "2026-06-09"
+    },
+    {
+      "id": "n013",
+      "label": "测试：Cursor AI编程技巧",
+      "keywords": [
+        "Agent与AI编程",
+        "OCR"
+      ],
+      "path": "01_原始灵感\\2026-06-09_测试：Cursor_AI编程技巧",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "kw_Agent与AI编程",
+      "label": "#Agent与AI编程",
+      "keywords": [
+        "Agent与AI编程"
+      ],
+      "path": null,
+      "date": "2026-06-12"
+    },
+    {
+      "id": "kw_OCR",
+      "label": "#OCR",
+      "keywords": [
+        "OCR"
+      ],
+      "path": null,
+      "date": "2026-06-12"
+    },
+    {
+      "id": "n016",
+      "label": "未命名灵感",
+      "keywords": [
+        "工作流与自动化",
+        "手动输入"
+      ],
+      "path": "01_原始灵感\\2026-06-09_未命名灵感",
+      "date": "2026-06-12"
+    },
+    {
+      "id": "kw_工作流与自动化",
+      "label": "#工作流与自动化",
+      "keywords": [
+        "工作流与自动化"
+      ],
+      "path": null,
+      "date": "2026-06-12"
+    },
+    {
+      "id": "kw_手动输入",
+      "label": "#手动输入",
+      "keywords": [
+        "手动输入"
+      ],
+      "path": null,
+      "date": "2026-06-12"
     }
   ],
   "edges": [
@@ -189,7 +245,27 @@
       "from": "n012",
       "to": "kw_待分析",
       "label": "待分析"
+    },
+    {
+      "from": "n013",
+      "to": "kw_Agent与AI编程",
+      "label": "Agent与AI编程"
+    },
+    {
+      "from": "n013",
+      "to": "kw_OCR",
+      "label": "OCR"
+    },
+    {
+      "from": "n016",
+      "to": "kw_工作流与自动化",
+      "label": "工作流与自动化"
+    },
+    {
+      "from": "n016",
+      "to": "kw_手动输入",
+      "label": "手动输入"
     }
   ],
-  "last_updated": "2026-06-09"
+  "last_updated": "2026-06-12"
 }

@@ -20,6 +20,8 @@
 """
 
 import sys, os, json, hashlib, base64, hmac, re, datetime
+from dotenv import load_dotenv
+load_dotenv()  # 从 .env 文件加载配置
 
 # Windows GBK 兼容
 if sys.stdout.encoding and sys.stdout.encoding.lower() in ("gbk", "gb2312"):
