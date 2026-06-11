@@ -84,6 +84,28 @@ def get_current_step():
             step = max(step, 1)
     return step
 
+STALL_TIMEOUT = 45  # 秒，超过此时间无新日志判定为卡住
+
+def get_stalled_info():
+    """检测是否处理超时。返回 (is_stalled, step_stuck, seconds_since_last)"""
+    step = get_current_step()
+    # 空闲(0)或已完成(6)不算卡住
+    if step == 0 or step == 6:
+        return False, step, 0
+    logs = read_logs(1)
+    if not logs:
+        return False, step, 0
+    try:
+        t = logs[0].get("time", "")
+        last_time = datetime.datetime.strptime(t, "%H:%M:%S")
+        now = datetime.datetime.now()
+        diff = (now - last_time).total_seconds()
+        if diff > STALL_TIMEOUT:
+            return True, step, int(diff)
+    except:
+        pass
+    return False, step, 0
+
 def get_watcher_status():
     """检查 watcher 是否在运行"""
     # 看最后一条日志的时间
@@ -118,6 +140,9 @@ def api_status():
         "today": get_today_count(),
         "total_entries": get_total_entries(),
         "step": get_current_step(),
+        "stalled": get_stalled_info()[0],
+        "stalled_step": get_stalled_info()[1],
+        "stalled_seconds": get_stalled_info()[2],
         "timestamp": datetime.datetime.now().isoformat()
     })
 
