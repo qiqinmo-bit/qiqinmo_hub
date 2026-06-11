@@ -2,17 +2,12 @@
 # 🤖 日常灵感工作流 — AI 自动分析
 # ============================================================
 # 当新灵感入库时，自动调用 AI 进行分析并保存结果。
+# 一次性分析所有未分析的灵感（不是只分析最新的那篇）。
 #
 # 成本策略（三档回退）:
 #   1️⃣ GitHub Models (免费) — 用 GITHUB_TOKEN，零成本
 #   2️⃣ DeepSeek (低价)      — 用 DEEPSEEK_API_KEY
 #   3️⃣ OpenAI (付费兜底)    — 用 OPENAI_API_KEY
-#
-# 配置:
-#   在 GitHub 仓库 Settings → Secrets and variables → Actions 中设置:
-#   - DEEPSEEK_API_KEY (可选)
-#   - OPENAI_API_KEY (可选)
-#   GITHUB_TOKEN 自动可用，无需配置
 # ============================================================
 
 name: 🤖 灵感自动分析
@@ -38,57 +33,66 @@ jobs:
       - name: ⬇️ 检出仓库
         uses: actions/checkout@v4
         with:
-          fetch-depth: 5
+          fetch-depth: 10
 
       - name: 🐍 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: 🔍 查找最新未分析的灵感
-        id: find_inspiration
+      - name: 🔍 查找所有未分析的灵感
+        id: find_pending
         run: |
-          # 找最新的 description.md
-          latest=$(find 01_原始灵感 -name "description.md" -newer .git/HEAD 2>/dev/null | head -1)
-          if [ -z "$latest" ]; then
-            latest=$(find 01_原始灵感 -name "description.md" -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
-          fi
-          echo "latest=$latest" >> $GITHUB_OUTPUT
-          echo "📄 待分析: $latest"
+          # 遍历所有 description.md，找还没有对应 analysis.md 的
+          > pending.txt
+          for desc in $(find 01_原始灵感 -name "description.md" -type f); do
+            folder=$(dirname "$desc")
+            folder_name=$(basename "$folder")
+            analysis_path="02_灵感分析/$folder_name/analysis.md"
+            if [ ! -f "$analysis_path" ]; then
+              echo "$desc" >> pending.txt
+              echo "⏳ 待分析: $folder_name"
+            fi
+          done
+          count=$(wc -l < pending.txt)
+          echo "count=$count" >> $GITHUB_OUTPUT
+          echo "📊 共 $count 篇待分析"
 
-      - name: 🧠 AI 分析（三档回退）
-        id: analyze
-        if: steps.find_inspiration.outputs.latest != ''
+      - name: 🧠 逐篇 AI 分析（三档回退）
+        if: steps.find_pending.outputs.count > 0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          desc_path="${{ steps.find_inspiration.outputs.latest }}"
-          echo "📄 分析: $desc_path"
-          result=$(python _scripts/ai_analyzer.py --file "$desc_path" --mode quick 2>&1)
-          echo "$result"
-          echo "result<<EOF" >> $GITHUB_OUTPUT
-          echo "$result" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          while IFS= read -r desc_path; do
+            folder_name=$(basename "$(dirname "$desc_path")")
+            echo ""
+            echo "=========================================="
+            echo "📄 分析: $folder_name"
+            echo "=========================================="
 
-      - name: 💾 保存分析结果到 02_灵感分析/
-        if: steps.analyze.outputs.result != ''
-        run: |
-          python -c "
+            result=$(python _scripts/ai_analyzer.py --file "$desc_path" --mode quick 2>&1)
+            echo "$result"
+
+            # 提取 JSON（最后一行是 JSON 输出）
+            json_line=$(echo "$result" | grep -E '^\{' | tail -1)
+            if [ -z "$json_line" ]; then
+              echo "⚠️ 跳过: 无法解析分析结果"
+              continue
+            fi
+
+            # 解析并保存
+            python3 -c "
 import sys, json, os
 from datetime import date
 
-result = json.loads(sys.stdin.read())
+result = json.loads('''$json_line''')
 if not result.get('success'):
     print('⚠️ 分析失败，跳过')
     sys.exit(0)
 
-# 从 description.md 路径推导灵感目录名
-desc_path = '${{ steps.find_inspiration.outputs.latest }}'
-folder_name = os.path.basename(os.path.dirname(desc_path))
-
-# 创建 02_灵感分析/ 目录
+folder_name = '$folder_name'
 target_dir = os.path.join('02_灵感分析', folder_name)
 os.makedirs(target_dir, exist_ok=True)
 
@@ -98,14 +102,13 @@ category = result.get('category', '')
 tier = result.get('tier', '')
 model = result.get('model', '')
 
-# 生成 analysis.md
 analysis = f'''# 灵感分析
 
 **日期**: {date.today().isoformat()}
 **来源**: 01_原始灵感/{folder_name}
 **分析引擎**: {tier} ({model})
 **建议分类**: {category}
-**关键词**: {\", \".join(keywords)}
+**关键词**: {', '.join(keywords)}
 
 ---
 
@@ -118,12 +121,14 @@ path = os.path.join(target_dir, 'analysis.md')
 with open(path, 'w', encoding='utf-8') as f:
     f.write(analysis)
 
-print(f'✅ 分析结果已保存: {path}')
-print(f'📂 建议分类: {category}')
+print(f'✅ 已保存: {path}')
+print(f'📂 分类: {category}')
 print(f'🏷️ 关键词: {', '.join(keywords)}')
-" << '${{ steps.analyze.outputs.result }}'
+"
 
-      - name: 📦 提交分析结果
+          done < pending.txt
+
+      - name: 📦 提交所有分析结果
         run: |
           git config user.name "灵感机器人"
           git config user.email "bot@inspiration-workflow"
@@ -131,7 +136,7 @@ print(f'🏷️ 关键词: {', '.join(keywords)}')
           if git diff --cached --quiet; then
             echo "ℹ️  无变更需要提交"
           else
-            git commit -m "🤖 auto: AI 分析新灵感 [skip ci]"
+            git commit -m "🤖 auto: AI 分析灵感 [skip ci]"
             git push
-            echo "✅ AI 分析结果已提交"
+            echo "✅ 所有分析结果已提交"
           fi
