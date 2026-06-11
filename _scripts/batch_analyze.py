@@ -43,15 +43,13 @@ for desc_path in pending:
         env={**os.environ, "PYTHONIOENCODING": "utf-8"}
     )
 
-    output = (result.stdout + result.stderr).strip()
-    json_line = ""
-    for line in output.split("\n"):
-        line = line.strip()
-        if line.startswith("{"):
-            json_line = line
+    # ai_analyzer.py 输出 JSON 到 stdout，进度到 stderr
+    json_line = result.stdout.strip()
 
     if not json_line:
         print(f"[跳过] 无法解析 AI 输出")
+        if result.stderr:
+            print(f"  stderr: {result.stderr.strip()[-200:]}")
         continue
 
     ai_result = json.loads(json_line)
