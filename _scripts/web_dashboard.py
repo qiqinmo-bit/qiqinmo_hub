@@ -123,6 +123,72 @@ def get_watcher_status():
             pass
     return "stopped"
 
+# ── GitHub Actions 状态缓存 ──────────────────────────
+
+GH_OWNER = "qiqinmo-bit"
+GH_REPO = "qiqinmo_hub"
+GH_CACHE_FILE = os.path.join(BASE, "_memory", "gh_status_cache.json")
+
+def fetch_gh_status():
+    """尝试从 GitHub API 获取最近工作流状态，失败则返回缓存"""
+    # 先检查缓存
+    cache = {}
+    if os.path.exists(GH_CACHE_FILE):
+        try:
+            with open(GH_CACHE_FILE, "r") as f:
+                cache = json.load(f)
+        except:
+            pass
+
+    cache_age = 0
+    if cache.get("time"):
+        try:
+            t = datetime.datetime.fromisoformat(cache["time"])
+            cache_age = (datetime.datetime.now() - t).total_seconds()
+        except:
+            pass
+
+    # 缓存 5 分钟内有效，避免频繁请求被限流
+    if cache_age < 300 and cache.get("workflows"):
+        return cache
+
+    # 尝试请求 GitHub API
+    try:
+        import urllib.request
+        url = f"https://api.github.com/repos/{GH_OWNER}/{GH_REPO}/actions/runs?per_page=5"
+        req = urllib.request.Request(url, headers={"Accept": "application/vnd.github.v3+json"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.load(r)
+
+        workflows = {}
+        for run in data.get("workflow_runs", []):
+            name = run["name"]
+            if name not in workflows:
+                workflows[name] = {
+                    "status": run["status"],
+                    "conclusion": run.get("conclusion"),
+                    "updated": run["updated_at"][:19],
+                    "url": run["html_url"]
+                }
+
+        result = {
+            "time": datetime.datetime.now().isoformat(),
+            "workflows": workflows
+        }
+        with open(GH_CACHE_FILE, "w") as f:
+            json.dump(result, f, ensure_ascii=False)
+        return result
+    except Exception as e:
+        # 失败返回缓存（如果有）
+        if cache.get("workflows"):
+            cache["offline"] = True
+            return cache
+        return {"time": datetime.datetime.now().isoformat(), "workflows": {}, "offline": True}
+
+@app.route("/api/gh-status")
+def api_gh_status():
+    return jsonify(fetch_gh_status())
+
 # ── 路由 ────────────────────────────────────────────
 
 @app.route("/")
