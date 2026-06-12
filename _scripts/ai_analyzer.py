@@ -132,6 +132,29 @@ def call_llm(tier: dict, prompt: str, mode: str = "quick") -> dict:
         return {"success": False, "error": f"{tier['name']}: {e}"}
 
 
+# ── 模型日志 ────────────────────────────────────────
+
+MODEL_LOG = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_memory", "last_model.json")
+
+def write_model_log(tier_name, model_name, label, success=True, error=None):
+    """记录最近一次模型调用结果到 _memory/last_model.json。"""
+    try:
+        import datetime
+        entry = {
+            "time": datetime.datetime.now().strftime("%H:%M:%S"),
+            "date": datetime.date.today().isoformat(),
+            "tier": tier_name,
+            "model": model_name,
+            "label": label,
+            "success": success,
+            "error": error
+        }
+        os.makedirs(os.path.dirname(MODEL_LOG), exist_ok=True)
+        with open(MODEL_LOG, "w", encoding="utf-8") as f:
+            json.dump(entry, f, ensure_ascii=False, indent=2)
+    except:
+        pass
+
 # ── 主流程：三档回退 ────────────────────────────────
 
 def analyze(prompt: str, mode: str = "quick") -> dict:
@@ -146,6 +169,7 @@ def analyze(prompt: str, mode: str = "quick") -> dict:
         if result["success"]:
             content = result["content"]
             used_tier = tier
+            write_model_log(tier["name"], tier["model"], tier["label"], success=True)
             print(f"  ✅ {tier['label']} 成功", file=sys.stderr)
             break
         else:
@@ -155,6 +179,7 @@ def analyze(prompt: str, mode: str = "quick") -> dict:
     if content is None:
         # 全部失败，用规则兜底
         print(f"  ⚠️  API 全部失败，使用规则兜底", file=sys.stderr)
+        write_model_log("rule_fallback", "none", "本地规则兜底", success=False)
         return {
             "success": True,
             "tier": "rule_fallback",

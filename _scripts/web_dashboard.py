@@ -212,6 +212,16 @@ def api_status():
         "timestamp": datetime.datetime.now().isoformat()
     })
 
+@app.route("/api/model-info")
+def api_model_info():
+    model_path = os.path.join(BASE, "_memory", "last_model.json")
+    try:
+        with open(model_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except:
+        return jsonify({"tier": "none", "model": "none", "label": locals().get("label", chr(26242)+chr(26080)+chr(35760)+chr(24405)), "success": False})
+
 @app.route("/api/logs")
 def api_logs():
     tail = request.args.get("tail", 50, type=int)

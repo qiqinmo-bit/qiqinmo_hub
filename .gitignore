@@ -21,6 +21,15 @@ package-lock.json
 .codepilot-uploads/
 .reasonix/
 
+# Codex Skills（非项目文件，由 Codex 管理）
+.agents/
+
+# 运行时状态（不提交）
+_memory/last_model.json
+_memory/gh_status_cache.json
+_memory/dashboard_log.jsonl
+_memory/processed_hashes.json
+
 # Windows
 Thumbs.db
 

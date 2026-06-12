@@ -232,6 +232,7 @@
     <span style="font-size:20px;">📸</span>
     <span style="font-weight:600;margin-left:6px;">收图夹监控</span>
     <span class="badge running" id="statusBadge">运行中</span>
+      <span class="badge" id="modelBadge" style="background:#484f58;color:#fff">模型: -</span>
   </div>
   <div class="stats">
     <div class="stat-item">
@@ -386,6 +387,30 @@ async function loadLogs() {
   } catch(e) {}
 }
 
+ async function updateModelInfo() {
+  try {
+    const resp = await fetch('/api/model-info');
+    const m = await resp.json();
+    const badge = document.getElementById('modelBadge');
+    if (m.tier === 'none') {
+      badge.textContent = '模型: 暂无记录';
+      badge.style.background = '#484f58';
+    } else if (m.tier === 'rule_fallback') {
+      badge.textContent = '模型: 本地规则';
+      badge.style.background = '#d29922';
+    } else if (m.success) {
+      const label = m.label.replace(/[()]/g, '').trim();
+      const short = label.includes('GitHub') ? 'GitHub' : label.includes('DeepSeek') ? 'DeepSeek' : label.includes('OpenAI') ? 'OpenAI' : label;
+      badge.textContent = '模型: ' + short;
+      badge.style.background = '#238636';
+      badge.title = m.label + ' (' + m.model + ') ✔️ ' + m.time;
+    } else {
+      badge.textContent = '\u6a21\u578b: \u5931\u8d25';
+      badge.style.background = '#da3633';
+    }
+  } catch(e) {}
+}
+
 async function updateStatus() {
   try {
     const resp = await fetch('/api/status');
@@ -499,6 +524,7 @@ setInterval(updateGhStatus, 60000);
 
 loadLogs();
 updateStatus();
+updateModelInfo();
 connectSSE();
 updateGhStatus();
 </script>

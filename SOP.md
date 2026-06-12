@@ -1,64 +1,52 @@
-# 📋 日常灵感工作流 — 标准操作流程 (SOP)
+﻿# 日常灵感工作流 — 标准操作流程 (SOP)
 
-> **目标**: 将碎片化灵感自动转化为结构化的知识资产
-> **版本**: v2.1 (收图夹 + 一键自动化)
-> **更新**: 2026-06-12
-
----
-
-## 目录
-
-1. [架构总览](#1-架构总览)
-2. [日常使用流程](#2-日常使用流程)
-3. [环境维护](#3-环境维护)
-4. [故障排查](#4-故障排查)
-5. [成本控制](#5-成本控制)
-6. [附录](#6-附录)
+> 目标：将碎片化灵感自动转化为结构化的知识资产
+> 版本：v3.0 (完整人机交互管道)
+> 更新：2026-06-13
 
 ---
 
 ## 1. 架构总览
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│ 🌀 自动化层 (收图夹 + n8n)                                  │
-│                                                             │
-│  收图夹: 截图拖入 → 自动OCR(rapidocr) → 入库 → push         │
-│  n8n:   定时抓B站热门 → POST Webhook → 写入灵感             │
-│               ↓                                              │
-├────────────────────────────────────────────────────────────┤
-│ ⚙️  GitHub Actions (云端 — 免费)                             │
-│                                                             │
-│  auto-process.yml  → 更新 memory_index + graph_data         │
-│  auto-analyze.yml  → AI 三档回退分析 (免费→低价→付费)        │
-│  deploy-pages.yml  → 发布知识图谱到 GitHub Pages            │
-│               ↓                                              │
-├────────────────────────────────────────────────────────────┤
-│ 🧠  决策层 (AI 助手 — 按需)                                  │
-│                                                             │
-│  读取分析结果 → 撰写知识文档 → 更新 facts.md + 知识图谱       │
-└────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ 🌀 自动化层 (本地)                                             │
+│                                                              │
+│  收图夹: 截图拖入 → 自动OCR(rapidocr) → 入库(01) → git push  │
+│  仪表盘: http://localhost:5677 实时查看进度+模型层级           │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│ ⚙️ 处理层 (GitHub Actions)                                    │
+│                                                              │
+│  1. batch_analyze.py     → AI 分析 → 02_灵感分析              │
+│  2. promote_knowledge.py → 知识文档 → 03_知识文档             │
+│  3. process_inspiration.py → 索引+图谱 → _memory + 04        │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│ 🧠 决策层 (AI 助手 — 按需)                                     │
+│                                                              │
+│  读取分析结果 → 撰写知识文档 → 更新 facts.md + 知识图谱         │
+│  AI 分析三档回退: GitHub Models(免费) → DeepSeek(低价) → OpenAI(兜底) │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 2. 日常使用流程
 
-### 2.1 收图夹模式（推荐）
+### 2.1 收图夹模式（推荐日常）
 
 ```
-① 双击「收图夹_启动.bat」          ← 后台常驻，最小化即可
-② 截图 → Ctrl+C → 进收图夹/ → Ctrl+V
-     ↓ 自动 (5秒内)
-    rapidocr 识别文字 → 创建 description.md → 入库
-    → 更新索引+图谱 → git push → GitHub
-③ GitHub Actions 自动 AI 分析
-④ 打开 GitHub Pages 看知识图谱
+① 双击「收图夹_启动.bat」      ← 后台常驻
+② 截图 → 放入 收图夹/          ← 自动处理，5秒内完成
+③ 打开仪表盘看进度              ← http://localhost:5677
+④ 等 GitHub Actions 自动跑完    ← 看仪表盘模型层级 绿=API成功 黄=本地规则
+⑤ 打开 GitHub Pages 看知识图谱
 ```
 
-**适合**: 日常碎片灵感、最省事
+**自动完成**: OCR → 入库 → git push → GitHub Actions 全自动分析 → 知识文档 → 图谱
 
-### 2.2 拖拽模式
+### 2.2 拖拽模式（偶尔用）
 
 ```
 把截图拖到「process.bat」上
@@ -66,190 +54,209 @@
 → 完事
 ```
 
-**适合**: 偶尔用一次，不想开后台
+### 2.3 Dashboard 实时监控
 
-### 2.3 AI 助手模式
-
-```
-你: [发截图/描述灵感]
-AI: 保存到 01_原始灵感/ → 分析 → 搜索 → 写文档 → 更新图谱
-你: git push
+启动仪表盘：
+```bash
+python _scripts/web_dashboard.py
+# 或双击 仪表盘_启动.bat
 ```
 
-**适合**: 深度分析，需要 AI 写知识文档
+**仪表盘功能：**
+- 进度条：1-6 步实时显示当前处理到哪一步
+- 模型徽章：🟢 DeepSeek / 🟡 本地规则 / ⚫ 等待中
+- 实时日志：SSE 推送日志，处理完成自动刷新
+- GitHub Actions 状态：最新工作流运行结果
+- 卡住检测：超过 45 秒无更新会黄色告警
 
-### 2.4 n8n 半自动模式
+### 2.4 AI 助手模式（深度分析）
+
+当你主动要求分析某篇灵感时：
 
 ```
-n8n: 每12h 抓 B站热门 → 写入 01_原始灵感/
-GitHub: 自动触发 AI 分析 (auto-analyze.yml)
-你:  看看分析结果，补充知识文档
+你: "分析这个灵感"
+AI: 1. 读取 01_原始灵感/description.md
+    2. 调用 DeepSeek API 分析
+    3. 生成分析结果 → 02_灵感分析/
+    4. 生成知识文档 → 03_知识文档/
+    5. 更新 facts.md + 知识图谱
+你: 审阅并确认
 ```
-
-**适合**: 批量采集不想手动找灵感
 
 ---
 
-## 3. 环境维护
+## 3. 完整管道详解
 
-### 3.1 本地服务启动
+### 截图到知识图谱的全链路
+
+```
+截图
+  → one_click.py / watcher.py      [本地] OCR + 入库
+  → git push                        [本地] 推送到 GitHub
+  → pipeline.yml (GitHub Actions) [云端]
+    ├─ batch_analyze.py → ai_analyzer.py → 02_灵感分析/
+    │   └─ 三档回退: GitHub Models → DeepSeek → OpenAI → 本地规则
+    ├─ promote_knowledge.py --auto  → 03_知识文档/
+    └─ process_inspiration.py --auto → _memory/index + 04/graph
+```
+
+### AI 分析三档回退策略
+
+| 优先级 | 来源 | 模型 | 成本 | 条件 |
+|--------|------|------|------|------|
+| 1 | GitHub Models | GPT-4o-mini | 免费 | 需 GITHUB_TOKEN |
+| 2 | DeepSeek | deepseek-chat | ¥0.5/百万Token | 需 DEEPSEEK_API_KEY |
+| 3 | OpenAI | GPT-4o | 付费 | 极少用到 |
+| 兜底 | 本地规则 | 关键词提取 | 免费 | 无 API 时的保底 |
+
+### 单张截图成本
+
+| 环节 | 成本 | 说明 |
+|------|------|------|
+| OCR 识别 | ¥0 | 本地 rapidocr-onnxruntime |
+| AI 分析(quick) | ~¥0.0012 | 输入600 + 输出500 tokens |
+| 知识文档生成(full) | ~¥0.0023 | 输入800 + 输出1000 tokens |
+| 索引更新 | ¥0 | 本地脚本 |
+| Git 推送 | ¥0 | 本地操作 |
+| GitHub Actions | ¥0 | 免费额度内 |
+| **合计** | **~¥0.0035/张** | **约 0.35 分** |
+
+**参考**: 1000 张截图 ≈ ¥3.50
+
+---
+
+## 4. 环境维护
+
+### 4.1 本地服务启动
 
 ```bash
 # 收图夹（推荐）
 python _scripts/watcher.py         # 或双击 收图夹_启动.bat
 
-# n8n (工作流引擎)
-n8n start                          # http://localhost:5678
-python _scripts/webhook_server.py  # Webhook 接收器
+# 仪表盘
+python _scripts/web_dashboard.py   # 或双击 仪表盘_启动.bat
+# 打开 http://localhost:5677
+
+# 查看知识库状态
+python _scripts/process_inspiration.py status
 ```
 
-### 3.2 推送到 GitHub
+### 4.2 推送到 GitHub
 
 ```bash
 git add -A
 git commit -m "新灵感: 标题"
-git push                           # Clash 代理自动配端口
+git push
+# Clash 代理自动配端口 7897
 ```
 
-### 3.3 查看知识库状态
+### 4.3 API Key 配置
+
+配置到 GitHub → Settings → Secrets and variables → Actions：
 
 ```bash
-python _scripts/process_inspiration.py status
+DEEPSEEK_API_KEY = sk-xxxx...  # 推荐，低价稳定
+OPENAI_API_KEY   = sk-xxxx...  # 兜底，极少用到
 ```
 
-### 3.4 一键处理（不启动后台）
+### 4.4 脚本速查
 
 ```bash
-# 把截图拖到 process.bat 上
-# 或命令行:
+# 一键处理截图
 python _scripts/one_click.py 截图路径
+
+# 查看待提升的知识条目
+python _scripts/promote_knowledge.py --status
+
+# 手动提升指定条目
+python _scripts/promote_knowledge.py --entry 2026-06-12_主题
+
+# AI 三档回退分析
+python _scripts/ai_analyzer.py --file description.md
+
+# 更新索引+图谱
+python _scripts/process_inspiration.py --auto
 ```
 
 ---
 
-## 4. 故障排查
+## 5. Dashboard 详解
 
-### 4.1 OCR 识别失败
+### 模型层级指示器
+
+仪表盘顶部显示当前使用的 AI 模型层级：
+
+```
+📸 收图夹监控 [运行中] [模型: DeepSeek] ← 新增
+              🟢 = API 成功    🟡 = 本地规则    ⚫ = 暂无记录
+```
+
+数据来源：`_memory/last_model.json`，每次 AI 分析后自动更新。
+
+### API 端点
+
+| 路径 | 说明 |
+|------|------|
+| `/` | 仪表盘主页面 |
+| `/api/status` | 处理状态 + watcher 状态 |
+| `/api/model-info` | 最近一次 AI 模型调用信息 |
+| `/api/logs` | 实时日志 |
+| `/api/gh-status` | GitHub Actions 运行状态 |
+| `/stream` | SSE 实时推送 |
+
+---
+
+## 6. 目录结构
+
+```
+日常灵感工作流/
+├── 收图夹/               # 截图拖入，自动处理
+├── 收图夹_启动.bat        # 后台监听启动
+├── 仪表盘_启动.bat        # 仪表盘启动
+├── process.bat            # 拖拽一键处理
+│
+├── 01_原始灵感/          # 截图 + OCR 文字
+├── 02_灵感分析/          # AI 分析结果
+├── 03_知识文档/          # 结构化知识文档
+│   ├── 01_Agent与AI编程/
+│   ├── 02_模型与API/
+│   ├── 03_工作流与自动化/
+│   ├── 04_提示词工程/
+│   └── 05_多模态与工具链/
+├── 04_知识网络/          # graph_data.json + knowledge_graph.md
+├── 05_模板/              # 文档模板
+├── _memory/              # 索引 + 事实库 + 运行时状态
+├── _scripts/             # 处理脚本
+├── templates/            # 仪表盘 HTML
+├── docs/                 # GitHub Pages 页面
+└── .github/workflows/    # GitHub Actions 工作流
+```
+
+---
+
+## 7. 故障排查
+
+### OCR 识别失败
 
 | 现象 | 原因 | 解决 |
 |------|------|------|
 | 识别不到文字 | 图片不清晰/非文字截图 | 手动创建 description.md |
 | DLL 加载失败 | onnxruntime 版本问题 | `pip install onnxruntime==1.17.0` |
-| numpy 冲突 | numpy 版本过高 | `pip install "numpy<2"` |
 
-### 4.2 Git 推送失败
+### AI 分析失败
+
+| 现象 | 原因 | 解决 |
+|------|------|------|
+| 三个 tier 全失败 | 所有 API Key 不可用 | 检查 GitHub Secrets |
+| rule_fallback | API 全部失败 | 仪表盘显示 🟡 本地规则 |
+| DeepSeek 超时 | 国内网络受限 | 配 Clash 代理或加 OPENAI_API_KEY |
+
+### Git 推送失败
 
 ```bash
-# 检查网络
-curl https://github.com -m 5
-
 # 手动配代理
 git config --local http.proxy http://127.0.0.1:7897
 git push
 git config --local --unset http.proxy
 ```
 
-### 4.3 GitHub Actions 不触发
-
-- 检查是否 push 到 `main` 分支
-- 检查 push 的文件路径是否在 `paths` 列表中
-- 去 GitHub → Actions 标签页查看运行日志
-
-### 4.4 AI 分析失败
-
-| 现象 | 原因 | 解决 |
-|------|------|------|
-| 三个 tier 都失败 | 所有 API Key 不可用 | 检查 GitHub Secrets |
-| 只有 GitHub Models 失败 | Token 无额度 | 确认 GITHUB_TOKEN 有权限 |
-| 分析结果为空 | 输入文本太短 | 确保 description.md 有内容 |
-
----
-
-## 5. 成本控制
-
-### 5.1 当前成本为零的项目
-
-| 项目 | 免费额度来源 |
-|------|-------------|
-| GitHub Actions | 公开仓库：2000 分钟/月 免费 |
-| GitHub Pages | 无限流量，完全免费 |
-| GitHub Models (GPT-4o-mini) | 通过 GITHUB_TOKEN 免费调用 |
-| OCR (rapidocr) | 本地运行，免费开源 |
-| n8n | 本地运行，免费开源 |
-| B站 API | 无需 Token，公开接口 |
-
-### 5.2 建议配置的 API Key
-
-配置到 GitHub Secrets，仅在免费额度用尽时降级使用：
-
-```
-DEEPSEEK_API_KEY  — DeepSeek Chat ¥0.5/百万token
-OPENAI_API_KEY    — GPT-4o 兜底（极少用到）
-```
-
-配置路径: GitHub → Settings → Secrets and variables → Actions
-
-### 5.3 Actions 分钟省着用
-
-```
-✅ 去掉了定时触发器        → 不空跑
-✅ concurrency 防排队     → 新提交取消旧排队
-✅ paths-ignore 防循环    → auto-process 自己的提交不触发二次运行
-```
-
-按当前使用频率，月消耗约 50-100 分钟，远低于免费额度。
-
----
-
-## 6. 附录
-
-### 6.1 目录结构速查
-
-```
-日常灵感工作流/
-├── 收图夹/               # 🗂️ 截图丢这里，自动处理
-├── 收图夹_启动.bat        # 🚀 双击启动后台监听
-├── process.bat            # 🖱️ 拖拽一键处理
-│
-├── 01_原始灵感/          # 截图 + description.md
-├── 02_灵感分析/          # analysis.md
-├── 03_知识文档/          # 按分类的结构化文档
-├── 04_知识网络/          # graph_data.json + knowledge_graph.md
-├── 05_模板/              # 文档模板
-├── _memory/              # memory_index.json + facts.md
-├── _scripts/             # 处理脚本
-├── docs/                 # GitHub Pages 页面
-└── .github/workflows/    # 3 个 Actions 工作流
-```
-
-### 6.2 常用脚本速查
-
-```bash
-# 启动收图夹
-python _scripts/watcher.py
-
-# 一键处理截图
-python _scripts/one_click.py 截图路径
-
-# 查看知识库状态
-python _scripts/process_inspiration.py status
-
-# AI 三档回退分析
-python _scripts/ai_analyzer.py --file description.md
-
-# n8n webhook 接收器
-python _scripts/webhook_server.py
-```
-
-### 6.3 n8n 登录信息
-
-| 项目 | 内容 |
-|------|------|
-| 地址 | http://localhost:5678 |
-| 邮箱 | qiqinmodgut@gmail.com |
-| 密码 | Dgut7HHH |
-
----
-
-> **关键原则**: 能免费的绝不付费，能自动的绝不手动。
-> GitHub Models 免费额度先用，DeepSeek 兜底，OpenAI 最后保底。

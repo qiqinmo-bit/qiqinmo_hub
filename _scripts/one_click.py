@@ -1,4 +1,4 @@
-"""
+﻿"""
 一键处理：截图 → OCR → 入库 → git push
 
 用法:
@@ -137,21 +137,43 @@ def auto_update():
 # ── 4. Git push ────────────────────────────────────
 
 def git_push():
+    PROXY_CACHE = os.path.join(BASE, "_memory", "proxy_port.txt")
     proxy_ports = [7897, 7890, 7891]
-    for port in proxy_ports:
-        subprocess.run(["git", "config", "--local", "http.proxy", f"http://127.0.0.1:{port}"],
-                      cwd=BASE, capture_output=True)
-        subprocess.run(["git", "config", "--local", "https.proxy", f"http://127.0.0.1:{port}"],
-                      cwd=BASE, capture_output=True)
-        test = subprocess.run(
-            ["git", "fetch", "--dry-run"],
-            cwd=BASE, capture_output=True, text=True, timeout=10
-        )
-        if test.returncode == 0 or "fatal" not in test.stderr.lower():
-            log(f"[代理] 端口 {port} 可用")
-            break
-        subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
-        subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
+    try:
+        cached = int(open(PROXY_CACHE, "r").read().strip())
+        if cached in proxy_ports:
+            proxy_ports = [cached] + [p for p in proxy_ports if p != cached]
+    except:
+        pass
+    port = proxy_ports[0]
+    subprocess.run(["git", "config", "--local", "http.proxy", f"http://127.0.0.1:{port}"],
+                  cwd=BASE, capture_output=True)
+    subprocess.run(["git", "config", "--local", "https.proxy", f"http://127.0.0.1:{port}"],
+                  cwd=BASE, capture_output=True)
+    test = subprocess.run(
+        ["git", "fetch", "--dry-run"],
+        cwd=BASE, capture_output=True, text=True, timeout=5
+    )
+    if test.returncode != 0 and "fatal" in test.stderr.lower():
+        for port in proxy_ports[1:]:
+            subprocess.run(["git", "config", "--local", "http.proxy", f"http://127.0.0.1:{port}"],
+                          cwd=BASE, capture_output=True)
+            subprocess.run(["git", "config", "--local", "https.proxy", f"http://127.0.0.1:{port}"],
+                          cwd=BASE, capture_output=True)
+            test = subprocess.run(
+                ["git", "fetch", "--dry-run"],
+                cwd=BASE, capture_output=True, text=True, timeout=5
+            )
+            if test.returncode == 0 or "fatal" not in test.stderr.lower():
+                break
+            subprocess.run(["git", "config", "--unset", "http.proxy"], cwd=BASE, capture_output=True)
+            subprocess.run(["git", "config", "--unset", "https.proxy"], cwd=BASE, capture_output=True)
+    log(f"[代理] 端口 {port} 可用")
+    try:
+        with open(PROXY_CACHE, "w") as f:
+            f.write(str(port))
+    except:
+        pass
 
     subprocess.run(["git", "add", "-A"], cwd=BASE, capture_output=True)
     result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=BASE, capture_output=True)
@@ -169,6 +191,14 @@ def git_push():
     )
     if push.returncode == 0:
         log("[推送] 成功")
+        pull = subprocess.run(
+            ["git", "pull", "--rebase", "--autostash"],
+            cwd=BASE, capture_output=True, text=True, timeout=30
+        )
+        if pull.returncode == 0:
+            log("[同步] 已拉取云端更新")
+        else:
+            log(f"[同步] 拉取失败: {pull.stderr[:100]}")
     else:
         log(f"[!!] 推送失败: {push.stderr[:200]}")
 
@@ -177,13 +207,38 @@ def git_push():
 
 # ── 入口 ────────────────────────────────────────────
 
+def local_analysis(title, ocr_text):
+    import tempfile, json
+    tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".md", encoding="utf-8", delete=False)
+    tmp.write(ocr_text)
+    tmp.close()
+    print("\n  [本地] AI 分析...")
+    result = subprocess.run(
+        [sys.executable, os.path.join(BASE, "_scripts", "ai_analyzer.py"), "--file", tmp.name, "--mode", "quick"],
+        capture_output=True, text=True, cwd=BASE,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"}
+    )
+    os.unlink(tmp.name)
+    try:
+        ai_result = json.loads(result.stdout.strip())
+        if ai_result.get("success"):
+            log(f"[AI] {ai_result.get('tier', 'unknown')} \u5206\u6790\u5b8c\u6210")
+            subprocess.run([sys.executable, os.path.join(BASE, "_scripts", "promote_knowledge.py"), "--auto"], capture_output=True, cwd=BASE)
+            subprocess.run([sys.executable, os.path.join(BASE, "_scripts", "process_inspiration.py"), "--auto"], capture_output=True, cwd=BASE)
+            print("  [\u672c\u5730] \u5168\u94fe\u8def\u5b8c\u6210\uff1a\u5206\u6790 \u2192 \u77e5\u8bc6\u6587\u6863 \u2192 \u56fe\u8c31")
+        else:
+            log("[AI] \u5206\u6790\u5931\u8d25")
+    except:
+        log("[AI] \u89e3\u6790\u7ed3\u679c\u5931\u8d25")
+
 def main():
     if len(sys.argv) < 2:
         print("用法: 把截图拖到 process.bat 上")
-        print("  或: python _scripts/one_click.py 截图路径")
+        print("  或: python _scripts/one_click.py 截图路径 [--full]")
         sys.exit(1)
 
     image_path = sys.argv[1]
+    full_mode = "--full" in sys.argv
     if not os.path.exists(image_path):
         print(f"[!!] 文件不存在: {image_path}")
         sys.exit(1)
@@ -213,6 +268,21 @@ def main():
     print("\n3. 更新索引...")
     auto_update()
 
+    print("\n3.5 归档截图...")
+    archive_dir = os.path.join(BASE, "_archive")
+    os.makedirs(archive_dir, exist_ok=True)
+    src_img = image_path
+    dest_img = os.path.join(archive_dir, os.path.basename(src_img))
+    try:
+        import shutil
+        if not os.path.exists(dest_img):
+            shutil.move(src_img, dest_img)
+        else:
+            os.remove(src_img)
+        log("[归档] 原图已移至 _archive/")
+    except Exception as e:
+        log(f"[归档] 失败: {e}")
+
     print("\n4. 推送到 GitHub...")
     git_push()
 
@@ -224,3 +294,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

@@ -1,0 +1,58 @@
+﻿name: 完整管道
+
+on:
+  push:
+    paths:
+      - "01_原始灵感/**/description.md"
+      - "02_灵感分析/**"
+      - "03_知识文档/**"
+    paths-ignore:
+      - "_memory/**"
+      - "04_知识网络/**"
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 步骤1 — AI 分析 → 02_灵感分析
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python _scripts/batch_analyze.py
+
+      - name: 步骤2 — 生成知识文档 → 03_知识文档
+        run: python _scripts/promote_knowledge.py --auto
+
+      - name: 步骤3 — 更新索引+图谱 → 04_知识网络
+        run: python _scripts/process_inspiration.py --auto
+
+      - name: 提交结果
+        run: |
+          git config user.name "灵感机器人"
+          git config user.email "bot@inspiration-workflow"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "auto: 完整管道 [skip ci]"
+            git push
+            echo "Committed"
+          fi

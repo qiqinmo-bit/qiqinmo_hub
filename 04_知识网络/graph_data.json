@@ -360,6 +360,118 @@
       ],
       "path": "01_原始灵感\\2026-06-13_灵感_009",
       "date": "2026-06-13"
+    },
+    {
+      "id": "n038",
+      "label": "Agent 框架对比：LangGraph vs AutoGen vs CrewAI",
+      "keywords": [
+        "LangGraph",
+        "AutoGen",
+        "CrewAI",
+        "Agent框架",
+        "低代码平台"
+      ],
+      "path": "03_知识文档\\01_Agent与AI编程\\Agent框架对比LangGraph_vs_AutoGen_vs_CrewAI.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n039",
+      "label": "AI Agent 系统设计核心问题",
+      "keywords": [
+        "Agent",
+        "Tool Calling",
+        "多Agent",
+        "状态管理",
+        "面试"
+      ],
+      "path": "03_知识文档\\01_Agent与AI编程\\AI_Agent系统设计核心问题.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n040",
+      "label": "AI编程工具进化：从补全到 Agent",
+      "keywords": [
+        "Cursor",
+        "Composer",
+        "Agent模式",
+        "AI编程",
+        "Aider",
+        "Cline"
+      ],
+      "path": "03_知识文档\\01_Agent与AI编程\\AI编程工具进化：从补全到Agent.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n041",
+      "label": "AI 模型选型场景指南",
+      "keywords": [
+        "GPT",
+        "Claude",
+        "Gemini",
+        "DeepSeek",
+        "MiniMax",
+        "模型选型",
+        "GLM"
+      ],
+      "path": "03_知识文档\\02_模型与API\\AI模型选型指南.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n042",
+      "label": "模型指令遵从与 RAG 系统优化",
+      "keywords": [
+        "模型不从指令",
+        "RAG",
+        "Rerank",
+        "AgenticRAG",
+        "Memory",
+        "Claude Code"
+      ],
+      "path": "03_知识文档\\02_模型与API\\模型指令遵从与RAG优化.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n043",
+      "label": "AI 记忆系统：短期记忆与长期记忆方案",
+      "keywords": [
+        "短期记忆",
+        "长期记忆",
+        "GraphRAG",
+        "向量数据库",
+        "Fine-tuning",
+        "BM25"
+      ],
+      "path": "03_知识文档\\03_工作流与自动化\\短期记忆与长期记忆GraphRAG方案.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n044",
+      "label": "Vibe Coding 工具链：Superpower + Codex + Stitch",
+      "keywords": [
+        "Vibe Coding",
+        "Superpower",
+        "Codex",
+        "Stitch",
+        "MCP",
+        "无代码开发"
+      ],
+      "path": "03_知识文档\\04_提示词工程\\VibeCoding工具链_Superpower_Codex_Stitch.md",
+      "date": "2026-06-13"
+    },
+    {
+      "id": "n045",
+      "label": "AI 视频制作与多模态工具链",
+      "keywords": [
+        "视频制作",
+        "ComfyUI",
+        "多模态",
+        "Runway",
+        "Wan",
+        "Kling",
+        "动作迁移"
+      ],
+      "path": "03_知识文档\\05_多模态与工具链\\AI视频制作与多模态工具链.md",
+      "date": "2026-06-13"
     }
   ],
   "edges": [

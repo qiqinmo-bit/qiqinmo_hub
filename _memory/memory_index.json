@@ -1,13 +1,13 @@
 {
   "知识版本": "2.0",
   "最后更新": "2026-06-13",
-  "总条目数": 18,
+  "总条目数": 24,
   "分类统计": {
-    "01_Agent与AI编程": 1,
-    "02_模型与API": 0,
-    "03_工作流与自动化": 0,
-    "04_提示词工程": 0,
-    "05_多模态与工具链": 0
+    "01_Agent与AI编程": 4,
+    "02_模型与API": 2,
+    "03_工作流与自动化": 1,
+    "04_提示词工程": 1,
+    "05_多模态与工具链": 1
   },
   "条目索引": [
     {
@@ -176,39 +176,181 @@
       ]
     },
     {
-      "id": "entry_017",
-      "title": "灵感_009",
-      "path": "01_原始灵感\\2026-06-12_灵感_009",
-      "date": "2026-06-12",
-      "keywords": [
-        "工作流与自动化",
-        "手动输入"
-      ]
-    },
-    {
-      "id": "entry_018",
-      "title": "灵感_009",
-      "path": "01_原始灵感\\2026-06-13_灵感_009",
+      "id": "entry_019",
+      "title": "Agent 框架对比：LangGraph vs AutoGen vs CrewAI",
+      "path": "03_知识文档\\01_Agent与AI编程\\Agent框架对比LangGraph_vs_AutoGen_vs_CrewAI.md",
       "date": "2026-06-13",
       "keywords": [
-        "模型与API",
-        "手动输入"
-      ]
+        "LangGraph",
+        "AutoGen",
+        "CrewAI",
+        "Agent框架",
+        "低代码平台"
+      ],
+      "source": "02_灵感分析/2026-06-12_灵感_002"
+    },
+    {
+      "id": "entry_020",
+      "title": "AI Agent 系统设计核心问题",
+      "path": "03_知识文档\\01_Agent与AI编程\\AI_Agent系统设计核心问题.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "Agent",
+        "Tool Calling",
+        "多Agent",
+        "状态管理",
+        "面试"
+      ],
+      "source": "02_灵感分析/2026-06-12_灵感_001"
+    },
+    {
+      "id": "entry_021",
+      "title": "AI编程工具进化：从补全到 Agent",
+      "path": "03_知识文档\\01_Agent与AI编程\\AI编程工具进化：从补全到Agent.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "Cursor",
+        "Composer",
+        "Agent模式",
+        "AI编程",
+        "Aider",
+        "Cline"
+      ],
+      "source": "02_灵感分析/2026-06-09_Cursor_AI编程技巧"
+    },
+    {
+      "id": "entry_022",
+      "title": "AI 模型选型场景指南",
+      "path": "03_知识文档\\02_模型与API\\AI模型选型指南.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "GPT",
+        "Claude",
+        "Gemini",
+        "DeepSeek",
+        "MiniMax",
+        "模型选型",
+        "GLM"
+      ],
+      "source": "02_灵感分析/2026-06-12_AI模型选择建议"
+    },
+    {
+      "id": "entry_023",
+      "title": "模型指令遵从与 RAG 系统优化",
+      "path": "03_知识文档\\02_模型与API\\模型指令遵从与RAG优化.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "模型不从指令",
+        "RAG",
+        "Rerank",
+        "AgenticRAG",
+        "Memory",
+        "Claude Code"
+      ],
+      "source": "02_灵感分析/2026-06-12_灵感_006"
+    },
+    {
+      "id": "entry_024",
+      "title": "AI 记忆系统：短期记忆与长期记忆方案",
+      "path": "03_知识文档\\03_工作流与自动化\\短期记忆与长期记忆GraphRAG方案.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "短期记忆",
+        "长期记忆",
+        "GraphRAG",
+        "向量数据库",
+        "Fine-tuning",
+        "BM25"
+      ],
+      "source": "02_灵感分析/2026-06-13_灵感_009"
+    },
+    {
+      "id": "entry_025",
+      "title": "Vibe Coding 工具链：Superpower + Codex + Stitch",
+      "path": "03_知识文档\\04_提示词工程\\VibeCoding工具链_Superpower_Codex_Stitch.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "Vibe Coding",
+        "Superpower",
+        "Codex",
+        "Stitch",
+        "MCP",
+        "无代码开发"
+      ],
+      "source": "02_灵感分析/2026-06-12_灵感_003"
+    },
+    {
+      "id": "entry_026",
+      "title": "AI 视频制作与多模态工具链",
+      "path": "03_知识文档\\05_多模态与工具链\\AI视频制作与多模态工具链.md",
+      "date": "2026-06-13",
+      "keywords": [
+        "视频制作",
+        "ComfyUI",
+        "多模态",
+        "Runway",
+        "Wan",
+        "Kling",
+        "动作迁移"
+      ],
+      "source": "02_灵感分析/2026-06-12_灵感_007"
     }
   ],
   "标签云": {
-    "Cursor": 1,
-    "Composer": 1,
-    "Agent模式": 1,
-    "AI编程": 1,
-    "Aider": 1,
-    "Cline": 1,
+    "Cursor": 2,
+    "Composer": 2,
+    "Agent模式": 2,
+    "AI编程": 2,
+    "Aider": 2,
+    "Cline": 2,
     "Agent与AI编程": 6,
     "OCR": 4,
-    "工作流与自动化": 4,
-    "手动输入": 13,
-    "模型与API": 6,
-    "多模态与工具链": 1
+    "工作流与自动化": 3,
+    "手动输入": 11,
+    "模型与API": 5,
+    "多模态与工具链": 1,
+    "LangGraph": 1,
+    "AutoGen": 1,
+    "CrewAI": 1,
+    "Agent框架": 1,
+    "低代码平台": 1,
+    "Agent": 1,
+    "Tool Calling": 1,
+    "多Agent": 1,
+    "状态管理": 1,
+    "面试": 1,
+    "GPT": 1,
+    "Claude": 1,
+    "Gemini": 1,
+    "DeepSeek": 1,
+    "MiniMax": 1,
+    "模型选型": 1,
+    "GLM": 1,
+    "模型不从指令": 1,
+    "RAG": 1,
+    "Rerank": 1,
+    "AgenticRAG": 1,
+    "Memory": 1,
+    "Claude Code": 1,
+    "短期记忆": 1,
+    "长期记忆": 1,
+    "GraphRAG": 1,
+    "向量数据库": 1,
+    "Fine-tuning": 1,
+    "BM25": 1,
+    "Vibe Coding": 1,
+    "Superpower": 1,
+    "Codex": 1,
+    "Stitch": 1,
+    "MCP": 1,
+    "无代码开发": 1,
+    "视频制作": 1,
+    "ComfyUI": 1,
+    "多模态": 1,
+    "Runway": 1,
+    "Wan": 1,
+    "Kling": 1,
+    "动作迁移": 1
   },
   "关联网络": [],
   "项目进度": {
