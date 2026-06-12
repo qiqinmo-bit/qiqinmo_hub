@@ -38,3 +38,22 @@
 {"time": "02:21:43", "type": "save", "msg": "入库: 灵感_008 (26段)"}
 {"time": "02:21:51", "type": "push", "msg": "推送到GitHub成功"}
 {"time": "02:21:51", "type": "complete", "msg": "完成: 灵感_008"}
+{"time": "02:04:10", "type": "process", "msg": "处理: img_v3_0212j_0a797753-d914-43ab-9969-63fce5f84a5g.jpg"}
+{"time": "02:04:10", "type": "skip", "msg": "跳过(重复): img_v3_0212j_0a797753-d914-43ab-9969-63fce5f84a5g.jpg"}
+{"time": "02:04:10", "type": "process", "msg": "处理: img_v3_0212j_19e52eb6-14a1-4617-a711-c4685820ff9g.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_19e52eb6-14a1-4617-a711-c4685820ff9g.jpg"}
+{"time": "02:04:11", "type": "process", "msg": "处理: img_v3_0212j_2d57df0b-a954-4449-8f10-04a308504f5g.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_2d57df0b-a954-4449-8f10-04a308504f5g.jpg"}
+{"time": "02:04:11", "type": "process", "msg": "处理: img_v3_0212j_709010d0-4b1e-44b8-8a63-cb209a97977g.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_709010d0-4b1e-44b8-8a63-cb209a97977g.jpg"}
+{"time": "02:04:11", "type": "process", "msg": "处理: img_v3_0212j_85533d82-1e9b-4c4b-8bb0-8066d6bd44ag.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_85533d82-1e9b-4c4b-8bb0-8066d6bd44ag.jpg"}
+{"time": "02:04:11", "type": "process", "msg": "处理: img_v3_0212j_c1a63e99-2a0f-41c2-b19d-44e3d3623bbg.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_c1a63e99-2a0f-41c2-b19d-44e3d3623bbg.jpg"}
+{"time": "02:04:11", "type": "process", "msg": "处理: img_v3_0212j_d006ede3-c6d4-4552-8069-d94407a3e86g.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_d006ede3-c6d4-4552-8069-d94407a3e86g.jpg"}
+{"time": "02:04:11", "type": "process", "msg": "处理: img_v3_0212j_f468ad43-c3e1-49e0-8f48-e5cd33b95e9g.jpg"}
+{"time": "02:04:11", "type": "skip", "msg": "跳过(重复): img_v3_0212j_f468ad43-c3e1-49e0-8f48-e5cd33b95e9g.jpg"}
+{"time": "02:05:01", "type": "process", "msg": "处理: 20260609-010108.jpg"}
+{"time": "02:05:11", "type": "info", "msg": "OCR识别: 36段文字"}
+{"time": "02:05:11", "type": "save", "msg": "入库: 灵感_009 (36段)"}
